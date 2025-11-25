@@ -31,6 +31,22 @@ export class DashboardComponent implements OnInit {
     neutral: 'Нейтрально',
     negative: 'Негатив',
   };
+  private transportLabels: Record<string, string> = {
+    metro: 'Метро',
+    bus: 'Автобус',
+    tram: 'Трамвай',
+    train: 'Поезд',
+    airplane: 'Самолёт',
+    water: 'Водный транспорт',
+    taxi: 'Такси',
+    other: 'Транспорт',
+  };
+  private categoryLabels: Record<string, string> = {
+    complaint: 'Жалоба',
+    request: 'Запрос',
+    incident: 'Инцидент',
+    praise: 'Благодарность',
+  };
 
   constructor(private readonly api: ApiService) {}
 
@@ -59,6 +75,13 @@ export class DashboardComponent implements OnInit {
 
   sentimentChip(sentiment: string): string {
     return this.sentimentLabels[sentiment] || 'Нейтрально';
+  }
+
+  topicLabel(ticket: Ticket): string {
+    if (ticket.is_transport && ticket.transport_mode) {
+      return this.transportLabels[ticket.transport_mode] || 'Транспорт';
+    }
+    return this.categoryLabels[ticket.category] || ticket.category;
   }
 
   private buildSentimentStats(data: any[]): {

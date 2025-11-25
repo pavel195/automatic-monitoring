@@ -29,6 +29,16 @@ export class TicketDetailsComponent {
   responseBody = '';
   sending = false;
   errorMessage = '';
+  private readonly transportLabels: Record<string, string> = {
+    metro: 'Метро',
+    bus: 'Автобус',
+    tram: 'Трамвай',
+    train: 'Поезд',
+    airplane: 'Самолёт',
+    water: 'Водный транспорт',
+    taxi: 'Такси',
+    other: 'Транспорт',
+  };
 
   constructor(
     private readonly api: ApiService,
@@ -94,7 +104,10 @@ export class TicketDetailsComponent {
         direction: 'inbound',
         author: `@${message.author || 'user'}`,
         text: message.payload,
-        meta: message.sentiment || 'neutral',
+        meta: this.buildMetaLabel(
+          this.transportLabels[message.transport_mode] || 'Транспорт',
+          message.sentiment
+        ),
         timestamp: message.received_at,
         status: '',
       })) || [];
@@ -108,8 +121,25 @@ export class TicketDetailsComponent {
         timestamp: response.created_at,
         status: response.status,
       })) || [];
-    return [...inbound, ...outbound].sort((a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    return [...inbound, ...outbound].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+  }
+
+  private buildMetaLabel(mode: string, sentiment: string | undefined) {
+    if (!sentiment) {
+      return mode;
+    }
+    return `${mode} · ${sentiment}`;
+  }
+
+  transportLabel(ticket: Ticket | undefined): string {
+    if (!ticket) {
+      return '—';
+    }
+    return (
+      this.transportLabels[ticket.transport_mode] ||
+      (ticket.is_transport ? 'Транспорт' : 'Другое')
     );
   }
 }

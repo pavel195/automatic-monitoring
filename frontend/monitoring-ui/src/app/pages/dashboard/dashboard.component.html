@@ -68,11 +68,11 @@
         <div>
           <p class="title">{{ ticket.title }}</p>
           <p class="muted">
-            {{ ticket.category }} • {{ priorityLabel(ticket.priority) }}
+            {{ topicLabel(ticket) }} · {{ priorityLabel(ticket.priority) }}
           </p>
         </div>
         <div class="badge" [class.badge-negative]="ticket.sentiment === 'negative'">
-          {{ ticket.sentiment || 'neutral' }}
+          {{ sentimentChip(ticket.sentiment) }}
         </div>
       </li>
     </ul>

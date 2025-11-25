@@ -15,6 +15,17 @@ export class AnalyticsChartsComponent implements OnChanges {
   sentimentData: { name: string; value: number }[] = [];
   statusData: { name: string; value: number }[] = [];
   channelData: { name: string; value: number }[] = [];
+  modeData: { name: string; value: number }[] = [];
+  private modeLabels: Record<string, string> = {
+    metro: 'Метро',
+    bus: 'Автобус',
+    tram: 'Трамвай',
+    train: 'Поезд',
+    airplane: 'Самолёт',
+    water: 'Водный',
+    taxi: 'Такси',
+    other: 'Другое',
+  };
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['metrics'] && this.metrics?.category_breakdown) {
@@ -42,6 +53,14 @@ export class AnalyticsChartsComponent implements OnChanges {
         .slice(0, 6)
         .map((item: any) => ({
           name: item.channel,
+          value: item.total,
+        }));
+    }
+    if (changes['metrics'] && this.metrics?.mode_breakdown) {
+      this.modeData = this.metrics.mode_breakdown
+        .filter((item: any) => item.transport_mode)
+        .map((item: any) => ({
+          name: this.modeLabels[item.transport_mode] || item.transport_mode,
           value: item.total,
         }));
     }

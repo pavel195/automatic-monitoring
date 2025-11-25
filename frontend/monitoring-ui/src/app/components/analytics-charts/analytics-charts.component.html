@@ -33,6 +33,17 @@
     </ngx-charts-pie-grid>
   </div>
 
+  <div class="chart-card" *ngIf="modeData.length">
+    <h3>Тип транспорта</h3>
+    <ngx-charts-pie-grid
+      [scheme]="{ domain: ['#7c3aed', '#f472b6', '#38b2ac', '#60a5fa', '#fbbf24'] }"
+      [results]="modeData"
+      [legend]="false"
+      [animations]="true"
+    >
+    </ngx-charts-pie-grid>
+  </div>
+
   <div class="chart-card" *ngIf="statusData.length">
     <h3>Статусы</h3>
     <ngx-charts-pie-chart

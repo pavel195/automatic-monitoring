@@ -34,6 +34,7 @@ def aggregate_metrics():
     category_breakdown = queryset.values("category").annotate(total=Count("id"))
     sentiment_breakdown = queryset.values("sentiment").annotate(total=Count("id"))
     status_breakdown = queryset.values("status").annotate(total=Count("id"))
+    mode_breakdown = queryset.values("transport_mode").annotate(total=Count("id"))
     transport_total = queryset.filter(is_transport=True).count()
     total = queryset.count()
 
@@ -54,6 +55,7 @@ def aggregate_metrics():
         "category_breakdown": list(category_breakdown),
         "sentiment_breakdown": list(sentiment_breakdown),
         "status_breakdown": list(status_breakdown),
+        "mode_breakdown": list(mode_breakdown),
         "channel_breakdown": list(channel_breakdown),
         "open_count": open_count,
         "new_count": new_count,

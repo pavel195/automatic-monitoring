@@ -11,6 +11,7 @@ export interface ChannelMessage {
   metadata: Record<string, unknown>;
   sentiment: string;
   is_transport: boolean;
+  transport_mode: string;
 }
 
 export interface TicketResponse {
@@ -29,6 +30,7 @@ export interface Ticket {
   status: string;
   sentiment: string;
   is_transport: boolean;
+  transport_mode: string;
   assigned_group: string;
   ack_deadline: string;
   resolve_deadline: string;

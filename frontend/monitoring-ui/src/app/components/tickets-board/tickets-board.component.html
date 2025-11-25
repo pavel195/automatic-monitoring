@@ -6,12 +6,14 @@
     </td>
   </ng-container>
 
-  <ng-container matColumnDef="category">
-    <th mat-header-cell *matHeaderCellDef>Категория</th>
-    <td mat-cell *matCellDef="let element">
-      <mat-chip>{{ element.category }}</mat-chip>
-    </td>
-  </ng-container>
+<ng-container matColumnDef="category">
+  <th mat-header-cell *matHeaderCellDef>Тематика</th>
+  <td mat-cell *matCellDef="let element">
+    <mat-chip [ngClass]="{ 'is-transport': element.is_transport }">
+      {{ displayCategory(element) }}
+    </mat-chip>
+  </td>
+</ng-container>
 
   <ng-container matColumnDef="priority">
     <th mat-header-cell *matHeaderCellDef>Приоритет</th>

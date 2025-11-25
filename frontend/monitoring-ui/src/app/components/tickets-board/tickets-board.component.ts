@@ -16,6 +16,24 @@ import { Subscription } from 'rxjs';
 export class TicketsBoardComponent implements OnInit, OnDestroy {
   @Output() selectTicket = new EventEmitter<Ticket>();
 
+  private readonly transportLabels: Record<string, string> = {
+    metro: 'Метро',
+    bus: 'Автобус',
+    tram: 'Трамвай',
+    train: 'Поезд',
+    airplane: 'Самолёт',
+    water: 'Водный транспорт',
+    taxi: 'Такси',
+    other: 'Транспорт',
+  };
+
+  private readonly categoryLabels: Record<string, string> = {
+    complaint: 'Жалоба',
+    praise: 'Благодарность',
+    request: 'Запрос',
+    incident: 'Инцидент',
+  };
+
   displayedColumns = [
     'title',
     'category',
@@ -73,6 +91,13 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
       default:
         return 'primary';
     }
+  }
+
+  displayCategory(ticket: Ticket): string {
+    if (ticket.is_transport && ticket.transport_mode) {
+      return this.transportLabels[ticket.transport_mode] || 'Транспорт';
+    }
+    return this.categoryLabels[ticket.category] || ticket.category;
   }
 
   ngOnDestroy(): void {

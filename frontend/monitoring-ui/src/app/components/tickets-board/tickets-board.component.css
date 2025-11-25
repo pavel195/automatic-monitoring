@@ -7,3 +7,8 @@ mat-chip {
   text-transform: capitalize;
 }
 
+.mat-mdc-chip.is-transport {
+  background-color: rgba(49, 46, 129, 0.35);
+  color: #f8fafc;
+}
+
