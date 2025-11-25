@@ -1,29 +1,102 @@
 <section class="cards" *ngIf="metrics">
-  <mat-card>
-    <h3>Всего обращений (24ч)</h3>
-    <p>{{ metrics.total }}</p>
+  <mat-card class="metric">
+    <div class="metric__icon metric__icon--violet">
+      <mat-icon>analytics</mat-icon>
+    </div>
+    <div>
+      <p>Всего обращений (24ч)</p>
+      <h2>{{ metrics.total }}</h2>
+    </div>
   </mat-card>
-  <mat-card>
-    <h3>Закрыто</h3>
-    <p>{{ metrics.resolved }}</p>
+  <mat-card class="metric">
+    <div class="metric__icon metric__icon--green">
+      <mat-icon>verified</mat-icon>
+    </div>
+    <div>
+      <p>Закрыто</p>
+      <h2>{{ metrics.resolved }}</h2>
+    </div>
   </mat-card>
-  <mat-card>
-    <h3>MTTA</h3>
-    <p>{{ metrics.mtta_seconds || 'н/д' }} с</p>
+  <mat-card class="metric">
+    <div class="metric__icon metric__icon--orange">
+      <mat-icon>schedule</mat-icon>
+    </div>
+    <div>
+      <p>MTTA</p>
+      <h2>{{ metrics.mtta_seconds || 'н/д' }} с</h2>
+    </div>
   </mat-card>
-  <mat-card>
-    <h3>MTTR</h3>
-    <p>{{ metrics.mttr_seconds || 'н/д' }} с</p>
+  <mat-card class="metric">
+    <div class="metric__icon metric__icon--cyan">
+      <mat-icon>timer</mat-icon>
+    </div>
+    <div>
+      <p>MTTR</p>
+      <h2>{{ metrics.mttr_seconds || 'н/д' }} с</h2>
+    </div>
+  </mat-card>
+  <mat-card class="metric">
+    <div class="metric__icon metric__icon--blue">
+      <mat-icon>train</mat-icon>
+    </div>
+    <div>
+      <p>Доля транспортных</p>
+      <h2>{{ (transportShare * 100) | number: '1.0-0' }}%</h2>
+    </div>
   </mat-card>
 </section>
 
-<section>
+<section class="sentiment-cards" *ngIf="sentimentStats.length">
+  <mat-card
+    class="sentiment-card"
+    *ngFor="let stat of sentimentStats"
+    [style.border-color]="stat.color"
+  >
+    <p>{{ stat.label }}</p>
+    <h2>{{ stat.percent }}%</h2>
+  </mat-card>
+</section>
+
+<section class="grid">
+  <mat-card class="latest" *ngIf="latestTickets.length">
+    <div class="card-header">
+      <h3>Недавние обращения</h3>
+      <span>Live feed</span>
+    </div>
+    <ul>
+      <li *ngFor="let ticket of latestTickets">
+        <div>
+          <p class="title">{{ ticket.title }}</p>
+          <p class="muted">
+            {{ ticket.category }} • {{ priorityLabel(ticket.priority) }}
+          </p>
+        </div>
+        <div class="badge" [class.badge-negative]="ticket.sentiment === 'negative'">
+          {{ ticket.sentiment || 'neutral' }}
+        </div>
+      </li>
+    </ul>
+  </mat-card>
+
+  <mat-card class="chart">
+    <div class="card-header">
+      <h3>SLA и категории</h3>
+      <span>MTTA/MTTR</span>
+    </div>
+    <app-analytics-charts [metrics]="metrics"></app-analytics-charts>
+  </mat-card>
+</section>
+
+<section class="board">
+  <div class="card-header spaced">
+    <div>
+      <h3>Поток обращений</h3>
+      <p class="muted">Обновляется автоматически каждые 10 секунд</p>
+    </div>
+    <button mat-stroked-button color="accent" routerLink="/tickets">
+      Смотреть все
+    </button>
+  </div>
   <app-tickets-board></app-tickets-board>
-</section>
-
-<section>
-  <app-analytics-charts
-    [metrics]="metrics"
-  ></app-analytics-charts>
 </section>
 

@@ -3,15 +3,37 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface ChannelMessage {
+  id: number;
+  author: string;
+  payload: string;
+  received_at: string;
+  metadata: Record<string, unknown>;
+  sentiment: string;
+  is_transport: boolean;
+}
+
+export interface TicketResponse {
+  id: number;
+  body: string;
+  status: string;
+  channel: string;
+  created_at: string;
+}
+
 export interface Ticket {
   id: number;
   title: string;
   category: string;
   priority: number;
   status: string;
+  sentiment: string;
+  is_transport: boolean;
   assigned_group: string;
   ack_deadline: string;
   resolve_deadline: string;
+  messages?: ChannelMessage[];
+  responses?: TicketResponse[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +54,12 @@ export class ApiService {
 
   resolveTicket(id: number): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.base}/tickets/${id}/resolve/`, {});
+  }
+
+  respondTicket(id: number, body: string): Observable<TicketResponse> {
+    return this.http.post<TicketResponse>(`${this.base}/tickets/${id}/respond/`, {
+      body,
+    });
   }
 
   getMetrics(): Observable<any> {

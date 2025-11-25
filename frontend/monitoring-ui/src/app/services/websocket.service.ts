@@ -1,52 +1,28 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
-import { Observable, Subject, interval } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { Observable, Subject, Subscription, interval } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class WebsocketService implements OnDestroy {
-  private socket?: WebSocket;
-  private messages$ = new Subject<any>();
+  private messages$ = new Subject<{ type: string }>();
+  private ticker: Subscription;
 
-  constructor(private readonly http: HttpClient) {
-    this.connect();
+  constructor() {
+    this.ticker = interval(10000)
+      .pipe(startWith(0))
+      .subscribe(() => this.messages$.next({ type: 'tick' }));
   }
 
-  private connect() {
-    try {
-      this.socket = new WebSocket(environment.wsUrl);
-      this.socket.onmessage = (event) => {
-        this.messages$.next(JSON.parse(event.data));
-      };
-      this.socket.onerror = () => this.reconnect();
-      this.socket.onclose = () => this.reconnect();
-    } catch (err) {
-      console.warn('WebSocket недоступен, переключаемся на poll', err);
-      this.startPolling();
-    }
-  }
-
-  private reconnect() {
-    setTimeout(() => this.connect(), 5000);
-  }
-
-  private startPolling() {
-    interval(10000)
-      .pipe(
-        switchMap(() => this.http.get(`${environment.apiUrl}/tickets/`))
-      )
-      .subscribe((tickets) => {
-        this.messages$.next({ type: 'poll', payload: tickets });
-      });
-  }
-
-  stream(): Observable<any> {
+  stream(): Observable<{ type: string }> {
     return this.messages$.asObservable();
   }
 
+  emitImmediate() {
+    this.messages$.next({ type: 'tick' });
+  }
+
   ngOnDestroy(): void {
-    this.socket?.close();
+    this.ticker.unsubscribe();
     this.messages$.complete();
   }
 }

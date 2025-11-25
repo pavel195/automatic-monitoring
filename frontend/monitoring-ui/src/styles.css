@@ -1,5 +1,12 @@
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+:root {
+  --gradient: radial-gradient(circle at top, #101828, #0f141c 60%);
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --text-primary: #e4e7ec;
+  --text-muted: #98a2b3;
+}
+
 html,
 body {
   height: 100%;
@@ -7,7 +14,57 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
-  background: #f7f9fc;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  background: var(--gradient);
+  color: var(--text-primary);
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+label {
+  color: var(--text-primary);
+}
+
+mat-card,
+.mat-mdc-card {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25) !important;
+  backdrop-filter: blur(18px);
+}
+
+.mat-mdc-card * {
+  color: inherit;
+}
+
+.mat-mdc-button .mdc-button__label,
+.mat-mdc-raised-button .mdc-button__label,
+.mat-mdc-stroked-button .mdc-button__label,
+.mat-mdc-icon-button .mdc-icon-button__label,
+.mat-mdc-button:not(.mat-mdc-button-disabled) {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.mat-mdc-button .mdc-button__ripple::before,
+.mat-mdc-button .mdc-button__ripple::after {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.mat-icon {
+  color: var(--text-primary);
+}
+
+a,
+.mat-button,
+.mat-mdc-button {
+  color: var(--text-primary);
 }
 

@@ -1,11 +1,61 @@
-<ngx-charts-bar-vertical
-  *ngIf="categoryData.length"
-  [scheme]="{ domain: ['#1976d2', '#f57c00', '#388e3c', '#c2185b'] }"
-  [results]="categoryData"
-  [xAxis]="true"
-  [yAxis]="true"
-  [legend]="false"
-  [roundDomains]="true"
->
-</ngx-charts-bar-vertical>
+<div class="charts">
+  <div class="chart-card" *ngIf="categoryData.length">
+    <div class="chart-header">
+      <div>
+        <p class="eyebrow">Категории обращений</p>
+        <h3>Распределение тем</h3>
+      </div>
+      <div class="pills">
+        <span class="pill" *ngFor="let item of categoryData | slice:0:3">
+          {{ item.name }} · {{ item.value }}
+        </span>
+      </div>
+    </div>
+    <ngx-charts-bar-vertical
+      [scheme]="{ domain: ['#7f5af0', '#f97316', '#22d3ee', '#ef4444'] }"
+      [results]="categoryData"
+      [xAxis]="true"
+      [yAxis]="true"
+      [legend]="false"
+      [roundDomains]="true"
+    >
+    </ngx-charts-bar-vertical>
+  </div>
+
+  <div class="chart-card" *ngIf="sentimentData.length">
+    <h3>Тональность</h3>
+    <ngx-charts-pie-grid
+      [scheme]="{ domain: ['#f97066', '#94a3b8', '#22d3ee'] }"
+      [results]="sentimentData"
+      [legend]="false"
+      [animations]="true"
+    >
+    </ngx-charts-pie-grid>
+  </div>
+
+  <div class="chart-card" *ngIf="statusData.length">
+    <h3>Статусы</h3>
+    <ngx-charts-pie-chart
+      [scheme]="{ domain: ['#f97316', '#facc15', '#38bdf8', '#22d3ee', '#94a3b8'] }"
+      [results]="statusData"
+      [legend]="true"
+      [doughnut]="true"
+      [labels]="true"
+    >
+    </ngx-charts-pie-chart>
+  </div>
+
+  <div class="chart-card" *ngIf="channelData.length">
+    <h3>Каналы поступления</h3>
+    <ngx-charts-bar-vertical
+      [scheme]="{ domain: ['#c026d3', '#db2777', '#0ea5e9', '#22d3ee'] }"
+      [results]="channelData"
+      [xAxis]="false"
+      [yAxis]="true"
+      [legend]="false"
+      [roundDomains]="true"
+    >
+    </ngx-charts-bar-vertical>
+  </div>
+</div>
 

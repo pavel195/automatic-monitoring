@@ -1,10 +1,39 @@
-<mat-toolbar color="primary">
-  <span>{{ title }}</span>
+<mat-toolbar class="app-toolbar" color="primary">
+  <div class="logo">
+    <mat-icon>hub</mat-icon>
+    <span>{{ title }}</span>
+  </div>
   <span class="spacer"></span>
-  <a mat-button routerLink="/">Дэшборд</a>
-  <a mat-button routerLink="/tickets">Обращения</a>
-  <a mat-button routerLink="/analytics">Аналитика</a>
+  <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+    Дэшборд
+  </a>
+  <a mat-button routerLink="/tickets" routerLinkActive="active-link">Обращения</a>
+  <a mat-button routerLink="/analytics" routerLinkActive="active-link">Аналитика</a>
+  <button mat-raised-button color="accent" routerLink="/tickets">
+    <mat-icon>flash_on</mat-icon>
+    Реагировать
+  </button>
 </mat-toolbar>
+
+<section class="hero">
+  <div class="hero__content">
+    <p class="eyebrow">Единый центр управления транспортом</p>
+    <h1>Мониторинг обращений и SLA в реальном времени</h1>
+    <p class="subtitle">
+      Автоматический сбор из Telegram, маршрутизация по критичности и быстрые ответы пассажирам.
+    </p>
+    <div class="hero__actions">
+      <button mat-flat-button color="accent" routerLink="/tickets">
+        <mat-icon>support_agent</mat-icon>
+        Перейти к инцидентам
+      </button>
+      <button mat-stroked-button color="primary" routerLink="/analytics">
+        <mat-icon>insights</mat-icon>
+        Аналитика SLA
+      </button>
+    </div>
+  </div>
+</section>
 
 <main class="content">
   <router-outlet></router-outlet>

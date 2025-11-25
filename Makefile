@@ -1,6 +1,6 @@
 DOCKER_COMPOSE = docker compose -f docker-compose.yml --project-name transport
 
-.PHONY: up down logs migrate shell backend tests collectstatic consumer
+.PHONY: up down logs migrate shell backend tests collectstatic
 
 up:
 	$(DOCKER_COMPOSE) up -d --build
@@ -25,7 +25,4 @@ tests:
 
 collectstatic:
 	$(DOCKER_COMPOSE) run --rm backend python manage.py collectstatic --noinput
-
-consumer:
-	$(DOCKER_COMPOSE) run --rm backend python manage.py run_kafka_consumer
 

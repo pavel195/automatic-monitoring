@@ -12,6 +12,9 @@ import { CommonModule } from '@angular/common';
 export class AnalyticsChartsComponent implements OnChanges {
   @Input() metrics: any;
   categoryData: { name: string; value: number }[] = [];
+  sentimentData: { name: string; value: number }[] = [];
+  statusData: { name: string; value: number }[] = [];
+  channelData: { name: string; value: number }[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['metrics'] && this.metrics?.category_breakdown) {
@@ -21,6 +24,26 @@ export class AnalyticsChartsComponent implements OnChanges {
           value: item.total,
         })
       );
+    }
+    if (changes['metrics'] && this.metrics?.sentiment_breakdown) {
+      this.sentimentData = this.metrics.sentiment_breakdown.map((item: any) => ({
+        name: item.sentiment,
+        value: item.total,
+      }));
+    }
+    if (changes['metrics'] && this.metrics?.status_breakdown) {
+      this.statusData = this.metrics.status_breakdown.map((item: any) => ({
+        name: item.status,
+        value: item.total,
+      }));
+    }
+    if (changes['metrics'] && this.metrics?.channel_breakdown) {
+      this.channelData = this.metrics.channel_breakdown
+        .slice(0, 6)
+        .map((item: any) => ({
+          name: item.channel,
+          value: item.total,
+        }));
     }
   }
 }

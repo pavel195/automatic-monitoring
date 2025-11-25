@@ -1,11 +1,122 @@
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.metric__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.metric__icon--violet {
+  background: linear-gradient(135deg, #7f5af0, #6246ea);
+}
+.metric__icon--green {
+  background: linear-gradient(135deg, #2dd4bf, #0ea5e9);
+}
+.metric__icon--orange {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+}
+.metric__icon--cyan {
+  background: linear-gradient(135deg, #06b6d4, #0284c7);
+}
+.metric__icon--blue {
+  background: linear-gradient(135deg, #312e81, #2563eb);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sentiment-cards {
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
-mat-card {
-  text-align: center;
+.sentiment-card {
+  flex: 1 1 140px;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge {
+  padding: 0.2rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(36, 211, 158, 0.2);
+  text-transform: capitalize;
+}
+
+.badge-negative {
+  background: rgba(249, 112, 102, 0.2);
+  color: #f97066;
+}
+
+.latest ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.latest li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.latest li:last-child {
+  border-bottom: none;
+}
+
+.title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.status {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.status-critical {
+  color: #f97066;
+}
+
+.board {
+  margin-bottom: 3rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header.spaced {
+  margin-bottom: 1.5rem;
 }
 

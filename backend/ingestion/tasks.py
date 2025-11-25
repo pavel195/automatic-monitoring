@@ -4,26 +4,37 @@ from datetime import datetime, timezone
 from celery import shared_task
 
 from ingestion.connectors.telegram_client import TelegramConnector
-from ingestion.consumers import RawMessageProducer
+from routing.tasks import classify_message
+from tickets.models import ChannelMessage, Sentiment, TransportMode
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task
 def poll_telegram():
-    """Периодический опрос Telegram и публикация в Kafka."""
+    """Периодический опрос Telegram и немедленная постановка сообщений в обработку."""
     connector = TelegramConnector()
-    producer = RawMessageProducer()
     events = connector.poll()
-    enriched = []
+    processed = 0
     for event in events:
-        event["received_at"] = event.get("received_at") or datetime.now(timezone.utc)
-        enriched.append(event)
-        connector.acknowledge(event["external_id"])
-    if enriched:
-        logger.info("Отправляем %s событий из Telegram", len(enriched))
-        try:
-            producer.send_events(enriched)
-        except Exception as exc:
-            logger.error("Kafka недоступен: %s", exc)
+        received_at = event.get("received_at") or datetime.now(timezone.utc)
+        msg, created = ChannelMessage.objects.get_or_create(
+            external_id=event["external_id"],
+            channel=event.get("channel", ChannelMessage.Channel.TELEGRAM),
+            defaults={
+                "author": event.get("author", ""),
+                "payload": event.get("payload", ""),
+                "metadata": event.get("metadata", {}),
+                "received_at": received_at,
+                "is_transport": True,
+                "sentiment": Sentiment.NEUTRAL,
+                "transport_mode": TransportMode.OTHER,
+            },
+        )
+        if created:
+            classify_message.delay(str(msg.id))
+            connector.acknowledge(event["external_id"])
+            processed += 1
+    if processed:
+        logger.info("Поставлено в обработку %s телеграм-сообщений", processed)
 

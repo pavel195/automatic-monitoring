@@ -5,6 +5,23 @@ from django.utils import timezone
 User = get_user_model()
 
 
+class Sentiment(models.TextChoices):
+    NEGATIVE = "negative", "Негатив"
+    NEUTRAL = "neutral", "Нейтрально"
+    POSITIVE = "positive", "Позитив"
+
+
+class TransportMode(models.TextChoices):
+    METRO = "metro", "Метро"
+    BUS = "bus", "Автобус"
+    TRAM = "tram", "Трамвай"
+    TRAIN = "train", "Поезд"
+    AIRPLANE = "airplane", "Самолёт"
+    WATER = "water", "Водный транспорт"
+    TAXI = "taxi", "Такси"
+    OTHER = "other", "Другое"
+
+
 class ChannelMessage(models.Model):
     class Channel(models.TextChoices):
         TELEGRAM = "telegram", "Telegram"
@@ -18,6 +35,15 @@ class ChannelMessage(models.Model):
     payload = models.TextField()
     metadata = models.JSONField(default=dict, blank=True)
     received_at = models.DateTimeField()
+    is_transport = models.BooleanField(default=True)
+    transport_mode = models.CharField(
+        max_length=16,
+        choices=TransportMode.choices,
+        default=TransportMode.OTHER,
+    )
+    sentiment = models.CharField(
+        max_length=16, choices=Sentiment.choices, default=Sentiment.NEUTRAL
+    )
     ticket = models.ForeignKey(
         "tickets.Ticket",
         on_delete=models.SET_NULL,
@@ -30,6 +56,8 @@ class ChannelMessage(models.Model):
     def __str__(self) -> str:  # pragma: no cover - удобное представление
         return f"{self.channel}:{self.external_id}"
 
+    class Meta:
+        unique_together = ("external_id", "channel")
 
 class Ticket(models.Model):
     class Category(models.TextChoices):
@@ -60,6 +88,15 @@ class Ticket(models.Model):
     )
     status = models.CharField(
         max_length=32, choices=Status.choices, default=Status.NEW
+    )
+    sentiment = models.CharField(
+        max_length=16, choices=Sentiment.choices, default=Sentiment.NEUTRAL
+    )
+    is_transport = models.BooleanField(default=True)
+    transport_mode = models.CharField(
+        max_length=16,
+        choices=TransportMode.choices,
+        default=TransportMode.OTHER,
     )
     assigned_group = models.CharField(
         max_length=128, blank=True, help_text="Ответственный департамент"
@@ -96,4 +133,49 @@ class Assignment(models.Model):
 
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.assignee} -> {self.ticket_id}"
+
+
+class TicketResponse(models.Model):
+    class Channel(models.TextChoices):
+        TELEGRAM = "telegram", "Telegram"
+        INTERNAL = "internal", "Внутренняя"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "В ожидании"
+        SENT = "sent", "Отправлено"
+        FAILED = "failed", "Ошибка"
+
+    ticket = models.ForeignKey(
+        Ticket, on_delete=models.CASCADE, related_name="responses"
+    )
+    channel_message = models.ForeignKey(
+        ChannelMessage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Связанное входящее сообщение",
+    )
+    author = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    channel = models.CharField(
+        max_length=32, choices=Channel.choices, default=Channel.TELEGRAM
+    )
+    body = models.TextField()
+    status = models.CharField(
+        max_length=32, choices=Status.choices, default=Status.PENDING
+    )
+    external_message_id = models.CharField(max_length=255, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def mark_sent(self, external_id: str):
+        self.status = self.Status.SENT
+        self.external_message_id = external_id
+        self.sent_at = timezone.now()
+        self.save(update_fields=["status", "external_message_id", "sent_at"])
+
+    def mark_failed(self):  # pragma: no cover - простая ветка
+        self.status = self.Status.FAILED
+        self.save(update_fields=["status"])
 

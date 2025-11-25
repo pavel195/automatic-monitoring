@@ -123,10 +123,6 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 
-KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
-KAFKA_RAW_TOPIC = os.getenv("KAFKA_RAW_TOPIC", "raw_messages")
-KAFKA_ALERTS_TOPIC = os.getenv("KAFKA_ALERTS_TOPIC", "alerts")
-
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_MONITOR_CHAT_ID = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
 

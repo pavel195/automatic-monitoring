@@ -1,2 +1,15 @@
+<section class="analytics-summary" *ngIf="summaryCards.length">
+  <mat-card *ngFor="let card of summaryCards">
+    <div class="card-icon">
+      <mat-icon>{{ card.icon }}</mat-icon>
+    </div>
+    <div>
+      <p class="label">{{ card.label }}</p>
+      <h2>{{ card.value }}</h2>
+      <p class="subtitle">{{ card.subtitle }}</p>
+    </div>
+  </mat-card>
+</section>
+
 <app-analytics-charts [metrics]="metrics"></app-analytics-charts>
 

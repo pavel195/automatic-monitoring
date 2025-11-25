@@ -3,6 +3,8 @@ import os
 from typing import Iterable, Mapping
 
 import requests
+import redis
+from django.conf import settings
 
 from ingestion.connectors.base import BaseConnector
 
@@ -19,7 +21,11 @@ class TelegramConnector(BaseConnector):
         self.token = os.getenv("TELEGRAM_BOT_TOKEN", "")
         self.chat_id = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
         self.api_url = f"https://api.telegram.org/bot{self.token}"
+        self.offset_key = "ingestion:telegram_offset"
         self._offset = 0
+        self.redis = None
+        self._init_state_store()
+        self._offset = self._get_stored_offset()
 
     def poll(self) -> Iterable[Mapping]:
         if not self.token:
@@ -54,8 +60,39 @@ class TelegramConnector(BaseConnector):
                     },
                 }
             )
+        if events:
+            self._persist_offset()
         return events
 
     def acknowledge(self, message_id: str) -> None:
         logger.debug("Telegram message %s отмечен как обработанный", message_id)
+
+    # --- внутренние служебные методы ---
+    def _init_state_store(self):
+        try:
+            self.redis = redis.Redis.from_url(
+                getattr(settings, "REDIS_URL", "redis://redis:6379/0"),
+                decode_responses=True,
+            )
+        except Exception as exc:  # pragma: no cover - логирование
+            logger.warning("Не удалось подключиться к Redis для offset: %s", exc)
+            self.redis = None
+
+    def _get_stored_offset(self) -> int:
+        if not self.redis:
+            return 0
+        value = self.redis.get(self.offset_key)
+        try:
+            return int(value) if value is not None else 0
+        except ValueError:  # pragma: no cover
+            logger.warning("Некорректное значение offset %s, сбрасываем", value)
+            return 0
+
+    def _persist_offset(self) -> None:
+        if not self.redis or self._offset is None:
+            return
+        try:
+            self.redis.set(self.offset_key, self._offset)
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Не удалось сохранить offset Telegram: %s", exc)
 

@@ -3,3 +3,70 @@
   min-height: 320px;
 }
 
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.chart-card {
+  padding: 1rem;
+}
+
+.chart-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.pills {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-muted);
+}
+
+:host ::ng-deep .ngx-charts text {
+  fill: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+:host ::ng-deep .ngx-charts .gridline-path {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+:host ::ng-deep .ngx-charts .axis path,
+:host ::ng-deep .ngx-charts .axis line {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+:host ::ng-deep .ngx-tooltip-content {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+}
+

@@ -6,6 +6,7 @@ from .views import (
     AssignmentViewSet,
     ChannelMessageViewSet,
     SearchView,
+    TicketResponseViewSet,
     TicketViewSet,
 )
 
@@ -13,6 +14,7 @@ router = DefaultRouter()
 router.register("messages", ChannelMessageViewSet)
 router.register("tickets", TicketViewSet)
 router.register("assignments", AssignmentViewSet)
+router.register("responses", TicketResponseViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

@@ -2,7 +2,6 @@ import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
 import { ApiService, Ticket } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { Subscription } from 'rxjs';
@@ -10,14 +9,21 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-tickets-board',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatChipsModule, MatIconModule],
+  imports: [CommonModule, MatTableModule, MatChipsModule],
   templateUrl: './tickets-board.component.html',
   styleUrls: ['./tickets-board.component.css'],
 })
 export class TicketsBoardComponent implements OnInit, OnDestroy {
   @Output() selectTicket = new EventEmitter<Ticket>();
 
-  displayedColumns = ['title', 'category', 'priority', 'status', 'group'];
+  displayedColumns = [
+    'title',
+    'category',
+    'priority',
+    'sentiment',
+    'status',
+    'group',
+  ];
   tickets: Ticket[] = [];
   private subscription = new Subscription();
 
@@ -30,7 +36,7 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
     this.loadTickets();
     this.subscription.add(
       this.ws.stream().subscribe((event) => {
-        if (event.type === 'ticket_created' || event.type?.includes('sla')) {
+        if (event) {
           this.loadTickets();
         }
       })
@@ -53,6 +59,17 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
         return 'warn';
       case 3:
         return 'accent';
+      default:
+        return 'primary';
+    }
+  }
+
+  sentimentColor(sentiment: string): string {
+    switch (sentiment) {
+      case 'positive':
+        return 'accent';
+      case 'negative':
+        return 'warn';
       default:
         return 'primary';
     }

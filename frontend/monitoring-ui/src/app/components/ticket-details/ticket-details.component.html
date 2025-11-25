@@ -1,25 +1,104 @@
-<mat-card *ngIf="ticket; else empty">
-  <mat-card-title>{{ ticket.title }}</mat-card-title>
-  <mat-card-content>
-    <p>Категория: {{ ticket.category }}</p>
-    <p>Статус: {{ ticket.status }}</p>
-    <p>Группа: {{ ticket.assigned_group }}</p>
-    <p>Дедлайн подтверждения: {{ ticket.ack_deadline | date: 'short' }}</p>
-    <p>Дедлайн решения: {{ ticket.resolve_deadline | date: 'short' }}</p>
-  </mat-card-content>
-  <mat-card-actions>
-    <button mat-stroked-button color="primary" (click)="acknowledge()">
-      Подтвердить
-    </button>
-    <button mat-flat-button color="accent" (click)="resolve()">
-      Закрыть
-    </button>
-  </mat-card-actions>
-</mat-card>
+<section *ngIf="ticket; else empty" class="ticket-details">
+  <mat-card>
+    <mat-card-title>{{ ticket.title }}</mat-card-title>
+    <mat-card-subtitle>
+      {{ ticket.category | titlecase }} · Приоритет {{ ticket.priority }}
+    </mat-card-subtitle>
+    <mat-card-content class="metadata">
+      <div>
+        <p class="label">Статус</p>
+        <p class="value">{{ ticket.status }}</p>
+      </div>
+      <div>
+        <p class="label">Тон</p>
+        <p class="value">{{ ticket.sentiment || 'neutral' }}</p>
+      </div>
+      <div>
+        <p class="label">Группа</p>
+        <p class="value">{{ ticket.assigned_group || '—' }}</p>
+      </div>
+      <div>
+        <p class="label">Тематика</p>
+        <p class="value">
+          {{ ticket.is_transport ? 'Транспорт' : 'Другое' }}
+        </p>
+      </div>
+      <div>
+        <p class="label">SLA подтверждения</p>
+        <p class="value">
+          {{ ticket.ack_deadline | date: 'short' }}
+        </p>
+      </div>
+      <div>
+        <p class="label">SLA решения</p>
+        <p class="value">
+          {{ ticket.resolve_deadline | date: 'short' }}
+        </p>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-stroked-button color="primary" (click)="acknowledge()">
+        Подтвердить
+      </button>
+      <button mat-flat-button color="accent" (click)="resolve()">
+        Закрыть
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <mat-card class="conversation">
+    <mat-card-title>Диалог</mat-card-title>
+    <div class="timeline" *ngIf="conversation.length; else noConversation">
+      <div
+        class="message"
+        [class.outbound]="item.direction === 'outbound'"
+        *ngFor="let item of conversation"
+      >
+        <p class="author">{{ item.author }}</p>
+        <p class="text">{{ item.text }}</p>
+        <p class="time">
+          {{ item.timestamp | date: 'short' }}
+          <span *ngIf="item.meta" class="tone">{{ item.meta }}</span>
+        </p>
+      </div>
+    </div>
+  </mat-card>
+
+  <mat-card class="response-form">
+    <mat-card-title>Ответить пассажиру</mat-card-title>
+    <mat-card-content>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Сообщение в Telegram</mat-label>
+        <textarea
+          matInput
+          rows="4"
+          [(ngModel)]="responseBody"
+          placeholder="Сообщение будет отправлено как ответ в Telegram-чате"
+        ></textarea>
+      </mat-form-field>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="sendResponse()"
+        [disabled]="sending"
+      >
+        <mat-icon>send</mat-icon>
+        {{ sending ? 'Отправка...' : 'Отправить' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</section>
 
 <ng-template #empty>
   <mat-card>
     <mat-card-content>Выберите обращение для просмотра деталей.</mat-card-content>
   </mat-card>
+</ng-template>
+
+<ng-template #noConversation>
+  <p class="muted">Диалог пока пуст.</p>
 </ng-template>
 
