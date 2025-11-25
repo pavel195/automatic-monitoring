@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+
+# Django
+media/
+staticfiles/
+
+# Environment
+.env
+.venv/
+
+# Node/Angular
+frontend/monitoring-ui/node_modules/
+frontend/monitoring-ui/dist/
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+

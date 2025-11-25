@@ -1,0 +1,25 @@
+<mat-card *ngIf="ticket; else empty">
+  <mat-card-title>{{ ticket.title }}</mat-card-title>
+  <mat-card-content>
+    <p>Категория: {{ ticket.category }}</p>
+    <p>Статус: {{ ticket.status }}</p>
+    <p>Группа: {{ ticket.assigned_group }}</p>
+    <p>Дедлайн подтверждения: {{ ticket.ack_deadline | date: 'short' }}</p>
+    <p>Дедлайн решения: {{ ticket.resolve_deadline | date: 'short' }}</p>
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-stroked-button color="primary" (click)="acknowledge()">
+      Подтвердить
+    </button>
+    <button mat-flat-button color="accent" (click)="resolve()">
+      Закрыть
+    </button>
+  </mat-card-actions>
+</mat-card>
+
+<ng-template #empty>
+  <mat-card>
+    <mat-card-content>Выберите обращение для просмотра деталей.</mat-card-content>
+  </mat-card>
+</ng-template>
+

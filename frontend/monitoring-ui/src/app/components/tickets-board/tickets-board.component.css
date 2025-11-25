@@ -1,0 +1,9 @@
+.tickets {
+  width: 100%;
+  cursor: pointer;
+}
+
+mat-chip {
+  text-transform: capitalize;
+}
+

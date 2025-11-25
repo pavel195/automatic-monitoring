@@ -1,0 +1,29 @@
+<section class="cards" *ngIf="metrics">
+  <mat-card>
+    <h3>Всего обращений (24ч)</h3>
+    <p>{{ metrics.total }}</p>
+  </mat-card>
+  <mat-card>
+    <h3>Закрыто</h3>
+    <p>{{ metrics.resolved }}</p>
+  </mat-card>
+  <mat-card>
+    <h3>MTTA</h3>
+    <p>{{ metrics.mtta_seconds || 'н/д' }} с</p>
+  </mat-card>
+  <mat-card>
+    <h3>MTTR</h3>
+    <p>{{ metrics.mttr_seconds || 'н/д' }} с</p>
+  </mat-card>
+</section>
+
+<section>
+  <app-tickets-board></app-tickets-board>
+</section>
+
+<section>
+  <app-analytics-charts
+    [metrics]="metrics"
+  ></app-analytics-charts>
+</section>
+

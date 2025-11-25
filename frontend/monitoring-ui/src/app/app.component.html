@@ -1,0 +1,12 @@
+<mat-toolbar color="primary">
+  <span>{{ title }}</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/">Дэшборд</a>
+  <a mat-button routerLink="/tickets">Обращения</a>
+  <a mat-button routerLink="/analytics">Аналитика</a>
+</mat-toolbar>
+
+<main class="content">
+  <router-outlet></router-outlet>
+</main>
+
