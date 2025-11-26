@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F
+from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Case, When, CharField
 from django.utils import timezone
 
 from tickets.models import ChannelMessage, Ticket
@@ -38,6 +38,18 @@ def aggregate_metrics():
     transport_total = queryset.filter(is_transport=True).count()
     total = queryset.count()
 
+    topic_expr = Case(
+        When(is_transport=True, then=F("transport_mode")),
+        default=F("category"),
+        output_field=CharField(),
+    )
+    topic_breakdown = (
+        queryset.annotate(topic=topic_expr)
+        .values("topic")
+        .annotate(total=Count("id"))
+        .order_by("-total")
+    )
+
     channel_queryset = ChannelMessage.objects.filter(received_at__gte=last_day)
     channel_breakdown = (
         channel_queryset.values("channel")
@@ -53,6 +65,7 @@ def aggregate_metrics():
         "mtta_seconds": mtta.total_seconds() if mtta else None,
         "mttr_seconds": mttr.total_seconds() if mttr else None,
         "category_breakdown": list(category_breakdown),
+        "topic_breakdown": list(topic_breakdown),
         "sentiment_breakdown": list(sentiment_breakdown),
         "status_breakdown": list(status_breakdown),
         "mode_breakdown": list(mode_breakdown),

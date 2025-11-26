@@ -12,10 +12,35 @@ import { CommonModule } from '@angular/common';
 export class AnalyticsChartsComponent implements OnChanges {
   @Input() metrics: any;
   categoryData: { name: string; value: number }[] = [];
+  topicData: { name: string; value: number }[] = [];
   sentimentData: { name: string; value: number }[] = [];
   statusData: { name: string; value: number }[] = [];
   channelData: { name: string; value: number }[] = [];
   modeData: { name: string; value: number }[] = [];
+  private readonly categoryLabels: Record<string, string> = {
+    complaint: 'Жалобы',
+    request: 'Запросы',
+    incident: 'Инциденты',
+    praise: 'Благодарности',
+  };
+  private readonly sentimentLabels: Record<string, string> = {
+    positive: 'Позитив',
+    neutral: 'Нейтрально',
+    negative: 'Негатив',
+  };
+  private readonly statusLabels: Record<string, string> = {
+    new: 'Новое',
+    acknowledged: 'Подтверждено',
+    in_progress: 'В работе',
+    resolved: 'Решено',
+    closed: 'Закрыто',
+  };
+  private readonly channelLabels: Record<string, string> = {
+    telegram: 'Telegram',
+    email: 'Email',
+    vk: 'VK',
+    other: 'Другое',
+  };
   private modeLabels: Record<string, string> = {
     metro: 'Метро',
     bus: 'Автобус',
@@ -28,23 +53,32 @@ export class AnalyticsChartsComponent implements OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['metrics'] && this.metrics?.topic_breakdown) {
+      this.topicData = this.metrics.topic_breakdown.map((item: any) => ({
+        name:
+          this.modeLabels[item.topic] ??
+          this.categoryLabels[item.topic] ??
+          item.topic,
+        value: item.total,
+      }));
+    }
     if (changes['metrics'] && this.metrics?.category_breakdown) {
       this.categoryData = this.metrics.category_breakdown.map(
         (item: any) => ({
-          name: item.category,
+          name: this.categoryLabels[item.category] || item.category,
           value: item.total,
         })
       );
     }
     if (changes['metrics'] && this.metrics?.sentiment_breakdown) {
       this.sentimentData = this.metrics.sentiment_breakdown.map((item: any) => ({
-        name: item.sentiment,
+        name: this.sentimentLabels[item.sentiment] || item.sentiment,
         value: item.total,
       }));
     }
     if (changes['metrics'] && this.metrics?.status_breakdown) {
       this.statusData = this.metrics.status_breakdown.map((item: any) => ({
-        name: item.status,
+        name: this.statusLabels[item.status] || item.status,
         value: item.total,
       }));
     }
@@ -52,7 +86,7 @@ export class AnalyticsChartsComponent implements OnChanges {
       this.channelData = this.metrics.channel_breakdown
         .slice(0, 6)
         .map((item: any) => ({
-          name: item.channel,
+          name: this.channelLabels[item.channel] || item.channel,
           value: item.total,
         }));
     }

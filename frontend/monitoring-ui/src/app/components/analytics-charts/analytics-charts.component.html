@@ -1,18 +1,31 @@
 <div class="charts">
-  <div class="chart-card" *ngIf="categoryData.length">
+  <div class="chart-card" *ngIf="topicData.length">
     <div class="chart-header">
       <div>
-        <p class="eyebrow">Категории обращений</p>
-        <h3>Распределение тем</h3>
+        <p class="eyebrow">Тематики обращений</p>
+        <h3>Распределение по каналам транспорта</h3>
       </div>
       <div class="pills">
-        <span class="pill" *ngFor="let item of categoryData | slice:0:3">
+        <span class="pill" *ngFor="let item of topicData | slice: 0: 3">
           {{ item.name }} · {{ item.value }}
         </span>
       </div>
     </div>
     <ngx-charts-bar-vertical
       [scheme]="{ domain: ['#7f5af0', '#f97316', '#22d3ee', '#ef4444'] }"
+      [results]="topicData"
+      [xAxis]="true"
+      [yAxis]="true"
+      [legend]="false"
+      [roundDomains]="true"
+    >
+    </ngx-charts-bar-vertical>
+  </div>
+
+  <div class="chart-card" *ngIf="categoryData.length">
+    <h3>Типы обращений</h3>
+    <ngx-charts-bar-vertical
+      [scheme]="{ domain: ['#38bdf8', '#fcd34d', '#f472b6', '#c084fc'] }"
       [results]="categoryData"
       [xAxis]="true"
       [yAxis]="true"

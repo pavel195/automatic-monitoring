@@ -2,20 +2,20 @@
   <mat-card>
     <mat-card-title>{{ ticket.title }}</mat-card-title>
     <mat-card-subtitle>
-      {{ ticket.category | titlecase }} · Приоритет {{ ticket.priority }}
+      {{ transportLabel(ticket) }} · Приоритет {{ priorityLabel(ticket.priority) }}
     </mat-card-subtitle>
     <mat-card-content class="metadata">
       <div>
         <p class="label">Статус</p>
-        <p class="value">{{ ticket.status }}</p>
+        <p class="value">{{ statusLabel(ticket.status) }}</p>
       </div>
       <div>
         <p class="label">Тон</p>
-        <p class="value">{{ ticket.sentiment || 'neutral' }}</p>
+        <p class="value">{{ sentimentLabel(ticket.sentiment) }}</p>
       </div>
       <div>
         <p class="label">Группа</p>
-        <p class="value">{{ ticket.assigned_group || '—' }}</p>
+        <p class="value">{{ groupLabel(ticket.assigned_group) }}</p>
       </div>
       <div>
         <p class="label">Тематика</p>

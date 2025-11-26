@@ -39,6 +39,42 @@ export class TicketDetailsComponent {
     taxi: 'Такси',
     other: 'Транспорт',
   };
+  private readonly statusLabels: Record<string, string> = {
+    new: 'Новое',
+    acknowledged: 'Подтверждено',
+    in_progress: 'В работе',
+    resolved: 'Решено',
+    closed: 'Закрыто',
+  };
+  private readonly sentimentLabels: Record<string, string> = {
+    positive: 'Позитивный',
+    neutral: 'Нейтральный',
+    negative: 'Негативный',
+  };
+  private readonly responseStatusLabels: Record<string, string> = {
+    pending: 'В ожидании',
+    sent: 'Отправлено',
+    failed: 'Ошибка',
+  };
+  private readonly groupLabels: Record<string, string> = {
+    operations: 'Эксплуатация',
+    safety: 'Безопасность',
+    info: 'Информация',
+    service: 'Сервис',
+    internal: 'Внутренние',
+  };
+  private readonly categoryLabels: Record<string, string> = {
+    complaint: 'Жалоба',
+    request: 'Запрос',
+    incident: 'Инцидент',
+    praise: 'Благодарность',
+  };
+  private readonly priorityLabels: Record<number, string> = {
+    1: 'Низкий',
+    2: 'Средний',
+    3: 'Высокий',
+    4: 'Критический',
+  };
 
   constructor(
     private readonly api: ApiService,
@@ -117,7 +153,7 @@ export class TicketDetailsComponent {
         direction: 'outbound',
         author: 'Оператор',
         text: response.body,
-        meta: response.status,
+        meta: this.responseStatusLabel(response.status),
         timestamp: response.created_at,
         status: response.status,
       })) || [];
@@ -130,17 +166,55 @@ export class TicketDetailsComponent {
     if (!sentiment) {
       return mode;
     }
-    return `${mode} · ${sentiment}`;
+    return `${mode} · ${this.sentimentLabels[sentiment] || sentiment}`;
   }
 
   transportLabel(ticket: Ticket | undefined): string {
     if (!ticket) {
       return '—';
     }
-    return (
-      this.transportLabels[ticket.transport_mode] ||
-      (ticket.is_transport ? 'Транспорт' : 'Другое')
-    );
+    if (ticket.is_transport) {
+      return (
+        this.transportLabels[ticket.transport_mode] ||
+        this.transportLabels.other
+      );
+    }
+    return this.categoryLabels[ticket.category] || ticket.category || '—';
+  }
+
+  statusLabel(value: string | undefined): string {
+    if (!value) {
+      return '—';
+    }
+    return this.statusLabels[value] || value;
+  }
+
+  sentimentLabel(value: string | undefined): string {
+    if (!value) {
+      return 'Нейтральный';
+    }
+    return this.sentimentLabels[value] || value;
+  }
+
+  responseStatusLabel(value: string | undefined): string {
+    if (!value) {
+      return '';
+    }
+    return this.responseStatusLabels[value] || value;
+  }
+
+  groupLabel(value: string | undefined): string {
+    if (!value) {
+      return '—';
+    }
+    return this.groupLabels[value] || value;
+  }
+
+  priorityLabel(value: number | undefined): string {
+    if (!value) {
+      return '—';
+    }
+    return this.priorityLabels[value] || `${value}`;
   }
 }
 

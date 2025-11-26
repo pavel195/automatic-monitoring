@@ -33,6 +33,25 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
     request: 'Запрос',
     incident: 'Инцидент',
   };
+  private readonly statusLabels: Record<string, string> = {
+    new: 'Новое',
+    acknowledged: 'Подтверждено',
+    in_progress: 'В работе',
+    resolved: 'Решено',
+    closed: 'Закрыто',
+  };
+  private readonly groupLabels: Record<string, string> = {
+    operations: 'Эксплуатация',
+    safety: 'Безопасность',
+    info: 'Информация',
+    service: 'Сервис',
+    internal: 'Внутренние',
+  };
+  private readonly sentimentLabels: Record<string, string> = {
+    positive: 'Позитивный',
+    neutral: 'Нейтральный',
+    negative: 'Негативный',
+  };
 
   displayedColumns = [
     'title',
@@ -98,6 +117,21 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
       return this.transportLabels[ticket.transport_mode] || 'Транспорт';
     }
     return this.categoryLabels[ticket.category] || ticket.category;
+  }
+
+  displayStatus(status: string): string {
+    return this.statusLabels[status] || status;
+  }
+
+  displayGroup(group: string): string {
+    return this.groupLabels[group] || group || '—';
+  }
+
+  displaySentiment(sentiment: string | undefined): string {
+    if (!sentiment) {
+      return 'Нейтральный';
+    }
+    return this.sentimentLabels[sentiment] || sentiment;
   }
 
   ngOnDestroy(): void {

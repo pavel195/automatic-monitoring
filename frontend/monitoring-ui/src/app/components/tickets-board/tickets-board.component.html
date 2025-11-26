@@ -26,21 +26,25 @@
 
   <ng-container matColumnDef="status">
     <th mat-header-cell *matHeaderCellDef>Статус</th>
-    <td mat-cell *matCellDef="let element">{{ element.status }}</td>
+    <td mat-cell *matCellDef="let element">
+      {{ displayStatus(element.status) }}
+    </td>
   </ng-container>
 
-<ng-container matColumnDef="sentiment">
-  <th mat-header-cell *matHeaderCellDef>Тон</th>
-  <td mat-cell *matCellDef="let element">
-    <mat-chip [color]="sentimentColor(element.sentiment)">
-      {{ element.sentiment || 'neutral' }}
-    </mat-chip>
-  </td>
-</ng-container>
+  <ng-container matColumnDef="sentiment">
+    <th mat-header-cell *matHeaderCellDef>Тон</th>
+    <td mat-cell *matCellDef="let element">
+      <mat-chip [color]="sentimentColor(element.sentiment)">
+        {{ displaySentiment(element.sentiment) }}
+      </mat-chip>
+    </td>
+  </ng-container>
 
   <ng-container matColumnDef="group">
     <th mat-header-cell *matHeaderCellDef>Группа</th>
-    <td mat-cell *matCellDef="let element">{{ element.assigned_group }}</td>
+    <td mat-cell *matCellDef="let element">
+      {{ displayGroup(element.assigned_group) }}
+    </td>
   </ng-container>
 
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
