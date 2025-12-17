@@ -33,6 +33,7 @@ export class AuthService {
   private readonly tokenKey = 'auth_token';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private currentProfileSubject = new BehaviorSubject<UserProfile | null>(null);
+  private tokenCheckInterval?: number;
   
   public currentUser$ = this.currentUserSubject.asObservable();
   public currentProfile$ = this.currentProfileSubject.asObservable();
@@ -45,6 +46,8 @@ export class AuthService {
     const token = this.getToken();
     if (token) {
       this.loadCurrentUser();
+      // Запускаем периодическую проверку токена (каждые 5 минут)
+      this.startTokenCheck();
     }
   }
 
@@ -57,6 +60,8 @@ export class AuthService {
         this.setToken(response.token);
         this.currentUserSubject.next(response.user);
         this.currentProfileSubject.next(response.profile);
+        // Запускаем периодическую проверку токена после успешного входа
+        this.startTokenCheck();
       })
     );
   }
@@ -88,9 +93,63 @@ export class AuthService {
   }
 
   clearAuth(): void {
+    console.log('[AuthService] Очистка авторизации');
     localStorage.removeItem(this.tokenKey);
     this.currentUserSubject.next(null);
     this.currentProfileSubject.next(null);
+    this.stopTokenCheck();
+  }
+
+  private startTokenCheck(): void {
+    // Останавливаем предыдущий интервал, если он был
+    this.stopTokenCheck();
+    
+    // Проверяем токен каждые 5 минут
+    this.tokenCheckInterval = window.setInterval(() => {
+      const token = this.getToken();
+      if (token && this.currentUserSubject.value) {
+        // Токен есть и пользователь загружен - проверяем валидность
+        this.verifyToken();
+      } else if (token && !this.currentUserSubject.value) {
+        // Токен есть, но пользователь не загружен - пытаемся загрузить
+        this.loadCurrentUser();
+      }
+    }, 5 * 60 * 1000); // 5 минут
+  }
+
+  private stopTokenCheck(): void {
+    if (this.tokenCheckInterval) {
+      clearInterval(this.tokenCheckInterval);
+      this.tokenCheckInterval = undefined;
+    }
+  }
+
+  private verifyToken(): void {
+    const token = this.getToken();
+    if (!token) {
+      return;
+    }
+
+    const headers = new HttpHeaders().set('Authorization', `Token ${token}`);
+    // Используем легковесный endpoint для проверки токена
+    this.http.get<{ user: User; profile: UserProfile | null }>(
+      `${this.base}/companies/auth/me/`,
+      { headers }
+    ).subscribe({
+      next: (response) => {
+        // Токен валидный, обновляем данные пользователя
+        this.currentUserSubject.next(response.user);
+        this.currentProfileSubject.next(response.profile);
+      },
+      error: (err) => {
+        // Если получили 401, токен невалидный - очищаем сессию
+        if (err.status === 401) {
+          console.warn('[AuthService] Токен истек или невалидный, очищаем сессию');
+          this.clearAuth();
+          this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+        }
+      },
+    });
   }
 
   isAuthenticated(): boolean {
@@ -137,8 +196,16 @@ export class AuthService {
         this.currentUserSubject.next(response.user);
         this.currentProfileSubject.next(response.profile);
       },
-      error: () => {
-        this.clearAuth();
+      error: (err) => {
+        // Очищаем токен только если получили 401 (невалидный токен)
+        // 403 или другие ошибки могут быть временными
+        if (err.status === 401) {
+          console.warn('[AuthService] Токен невалидный, очищаем сессию');
+          this.clearAuth();
+        } else {
+          console.warn('[AuthService] Ошибка загрузки пользователя:', err.status, err.statusText);
+          // При других ошибках не очищаем токен, возможно это временная проблема
+        }
       },
     });
   }

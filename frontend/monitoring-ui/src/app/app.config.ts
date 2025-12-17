@@ -6,6 +6,8 @@ import { TicketsComponent } from './pages/tickets/tickets.component';
 import { AnalyticsComponent } from './pages/analytics/analytics.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
+import { TelegramBotsComponent } from './pages/telegram-bots/telegram-bots.component';
+import { IntegrationsComponent } from './pages/integrations/integrations.component';
 import { authGuard } from './guards/auth.guard';
 import { authInterceptor } from './interceptors/auth.interceptor';
 
@@ -29,6 +31,28 @@ const routes: Routes = [
     component: AnalyticsComponent, 
     canActivate: [authGuard],
     data: { requiresAuth: true }
+  },
+  { 
+    path: 'integrations', 
+    component: IntegrationsComponent, 
+    canActivate: [authGuard],
+    data: { requiresAuth: true },
+    children: [
+      {
+        path: 'telegram-bots',
+        component: TelegramBotsComponent,
+      },
+      {
+        path: '',
+        redirectTo: 'telegram-bots',
+        pathMatch: 'full',
+      },
+    ]
+  },
+  { 
+    path: 'telegram-bots', 
+    redirectTo: '/integrations/telegram-bots',
+    pathMatch: 'full'
   },
   { path: '**', redirectTo: '/login' }, // Fallback для несуществующих роутов
 ];

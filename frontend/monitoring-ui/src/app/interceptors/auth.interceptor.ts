@@ -20,10 +20,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Если получили 401 или 403, очищаем авторизацию и редиректим на логин
-      if (error.status === 401 || error.status === 403) {
-        authService.clearAuth();
-        router.navigate(['/login'], { replaceUrl: true });
+      // Обрабатываем только 401 (Unauthorized) - это означает, что токен невалидный или истек
+      // 403 (Forbidden) - это недостаточно прав, но токен валидный, поэтому не очищаем сессию
+      if (error.status === 401) {
+        // Проверяем, что это не запрос на логин или регистрацию
+        const url = error.url || '';
+        if (!url.includes('/auth/login') && !url.includes('/register')) {
+          authService.clearAuth();
+          router.navigate(['/login'], { queryParams: { returnUrl: router.url }, replaceUrl: false });
+        }
       }
       return throwError(() => error);
     })

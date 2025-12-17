@@ -10,6 +10,18 @@
     </a>
     <a mat-button routerLink="/tickets" routerLinkActive="active-link">Обращения</a>
     <a mat-button routerLink="/analytics" routerLinkActive="active-link">Аналитика</a>
+    <button mat-button [matMenuTriggerFor]="integrationsMenu" *ngIf="isCompanyAdmin$ | async">
+      <mat-icon>integration_instructions</mat-icon>
+      Интеграции
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #integrationsMenu="matMenu">
+      <button mat-menu-item routerLink="/integrations/telegram-bots">
+        <mat-icon>smart_toy</mat-icon>
+        <span>Telegram</span>
+      </button>
+      <!-- В будущем можно добавить другие интеграции -->
+    </mat-menu>
     <button mat-raised-button color="accent" routerLink="/tickets">
       <mat-icon>flash_on</mat-icon>
       Реагировать

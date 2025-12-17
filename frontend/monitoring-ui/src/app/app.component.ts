@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
   isAuthenticated$: Observable<boolean>;
   currentUser$: Observable<any>;
   currentProfile$: Observable<any>;
+  isCompanyAdmin$: Observable<boolean>;
 
   constructor(
     private readonly authService: AuthService,
@@ -44,6 +45,9 @@ export class AppComponent implements OnInit {
     );
     this.currentUser$ = this.authService.currentUser$;
     this.currentProfile$ = this.authService.currentProfile$;
+    this.isCompanyAdmin$ = this.authService.currentProfile$.pipe(
+      map(profile => profile ? (this.authService.isCompanyAdmin() || this.authService.isSuperAdmin()) : false)
+    );
   }
 
   ngOnInit(): void {
@@ -63,23 +67,35 @@ export class AppComponent implements OnInit {
     setTimeout(() => {
       const token = this.authService.getToken();
       const currentUrl = this.router.url;
+      const isPublicPage = currentUrl === '/login' || currentUrl === '/register';
       
-      // Если нет токена и не на странице логина/регистрации - редирект
-      if (!token && currentUrl !== '/login' && currentUrl !== '/register') {
+      // Если нет токена и не на публичной странице - редирект
+      if (!token && !isPublicPage) {
         console.log('[AppComponent] Нет токена, редирект на /login');
-        this.router.navigate(['/login'], { replaceUrl: true });
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: currentUrl },
+          replaceUrl: false 
+        });
+      } else if (token && !this.authService.getCurrentUser()) {
+        // Если токен есть, но пользователь не загружен - пытаемся загрузить
+        // Это нормально, пользователь загрузится асинхронно через AuthService
+        console.log('[AppComponent] Токен найден, ожидаем загрузку пользователя...');
       }
-    }, 50);
+    }, 100);
   }
 
   private checkAuthOnNavigation(): void {
     const token = this.authService.getToken();
     const currentUrl = this.router.url;
+    const isPublicPage = currentUrl === '/login' || currentUrl === '/register';
     
-    // Если нет токена и не на публичных страницах - редирект
-    if (!token && currentUrl !== '/login' && currentUrl !== '/register') {
+    // Если нет токена и не на публичной странице - редирект
+    if (!token && !isPublicPage) {
       console.log('[AppComponent] Нет токена при навигации, редирект на /login');
-      this.router.navigate(['/login'], { replaceUrl: true });
+      this.router.navigate(['/login'], { 
+        queryParams: { returnUrl: currentUrl },
+        replaceUrl: false 
+      });
     }
   }
 
