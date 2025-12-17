@@ -1,0 +1,46 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-title>
+      <mat-icon>lock</mat-icon>
+      Вход в систему
+    </mat-card-title>
+    <mat-card-content>
+      <form (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Имя пользователя</mat-label>
+          <input matInput [(ngModel)]="username" name="username" required autocomplete="username" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Пароль</mat-label>
+          <input
+            matInput
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            required
+            autocomplete="current-password"
+          />
+        </mat-form-field>
+
+        <p class="error" *ngIf="error">{{ error }}</p>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="full-width"
+          [disabled]="loading"
+        >
+          <mat-icon *ngIf="!loading">login</mat-icon>
+          {{ loading ? 'Вход...' : 'Войти' }}
+        </button>
+      </form>
+      
+      <div class="register-link">
+        <p>Нет аккаунта? <a routerLink="/register">Зарегистрировать компанию</a></p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+

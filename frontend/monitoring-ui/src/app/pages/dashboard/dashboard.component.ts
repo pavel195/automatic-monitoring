@@ -55,17 +55,35 @@ export class DashboardComponent implements OnInit {
   }
 
   loadData() {
-    this.api.getMetrics().subscribe((metrics) => {
-      this.metrics = metrics;
-      this.transportShare = metrics?.transport_share || 0;
-      this.sentimentStats = this.buildSentimentStats(
-        metrics?.sentiment_breakdown || []
-      );
+    this.api.getMetrics().subscribe({
+      next: (metrics) => {
+        this.metrics = metrics;
+        this.transportShare = metrics?.transport_share || 0;
+        this.sentimentStats = this.buildSentimentStats(
+          metrics?.sentiment_breakdown || []
+        );
+      },
+      error: (err) => {
+        console.error('Ошибка загрузки метрик:', err);
+        if (err.status === 401 || err.status === 403) {
+          // Перенаправление будет обработано guard
+        }
+      },
     });
-    this.api.getTickets().subscribe((data: any) => {
-      const tickets = Array.isArray(data) ? data : data.results;
-      this.latestTickets = tickets.slice(0, 4);
-      this.loading = false;
+    this.api.getTickets().subscribe({
+      next: (data: any) => {
+        const tickets = Array.isArray(data) ? data : data.results || [];
+        this.latestTickets = tickets.slice(0, 4);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Ошибка загрузки тикетов:', err);
+        this.latestTickets = [];
+        this.loading = false;
+        if (err.status === 401 || err.status === 403) {
+          // Перенаправление будет обработано guard
+        }
+      },
     });
   }
 

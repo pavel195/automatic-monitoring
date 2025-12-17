@@ -20,5 +20,6 @@ urlpatterns = [
     path("", include(router.urls)),
     path("analytics/metrics/", AnalyticsMetricsView.as_view(), name="metrics"),
     path("search", SearchView.as_view(), name="search"),
+    path("companies/", include("companies.urls")),
 ]
 

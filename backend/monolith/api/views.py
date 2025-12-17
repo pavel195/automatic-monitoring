@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from analytics.metrics import aggregate_metrics
 from analytics.search_indexer import search_tickets
+from companies.permissions import CompanyObjectPermission, IsCompanyMember
 from routing.tasks import classify_message
 from tickets.models import Assignment, ChannelMessage, Ticket, TicketResponse
 from tickets.services import TicketResponseService
@@ -19,9 +20,27 @@ from .serializers import (
 
 
 class ChannelMessageViewSet(viewsets.ModelViewSet):
-    queryset = ChannelMessage.objects.select_related("ticket").all()
+    queryset = ChannelMessage.objects.select_related("ticket", "company").all()
     serializer_class = ChannelMessageSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+
+    def get_queryset(self):
+        """Фильтрация сообщений по правам доступа."""
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()
+
+        if hasattr(user, "profile"):
+            profile = user.profile
+            # Супер-администратор видит все сообщения
+            if profile.is_superadmin():
+                return queryset
+            # Остальные видят только сообщения своей компании
+            if profile.company:
+                return queryset.filter(company=profile.company)
+
+        return queryset.none()
 
     @action(detail=True, methods=["post"])
     def classify(self, request, pk=None):
@@ -32,11 +51,29 @@ class ChannelMessageViewSet(viewsets.ModelViewSet):
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = (
         Ticket.objects.prefetch_related("messages", "responses")
-        .select_related("assigned_to")
+        .select_related("assigned_to", "company")
         .all()
     )
     serializer_class = TicketSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+
+    def get_queryset(self):
+        """Фильтрация тикетов по правам доступа."""
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()
+
+        if hasattr(user, "profile"):
+            profile = user.profile
+            # Супер-администратор видит все тикеты
+            if profile.is_superadmin():
+                return queryset
+            # Остальные видят только тикеты своей компании
+            if profile.company:
+                return queryset.filter(company=profile.company)
+
+        return queryset.none()
 
     @action(detail=True, methods=["post"])
     def acknowledge(self, request, pk=None):
@@ -70,31 +107,77 @@ class TicketViewSet(viewsets.ModelViewSet):
 
 
 class AssignmentViewSet(viewsets.ModelViewSet):
-    queryset = Assignment.objects.select_related("ticket").all()
+    queryset = Assignment.objects.select_related("ticket", "ticket__company").all()
     serializer_class = AssignmentSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+
+    def get_queryset(self):
+        """Фильтрация назначений по правам доступа."""
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()
+
+        if hasattr(user, "profile"):
+            profile = user.profile
+            # Супер-администратор видит все назначения
+            if profile.is_superadmin():
+                return queryset
+            # Остальные видят только назначения тикетов своей компании
+            if profile.company:
+                return queryset.filter(ticket__company=profile.company)
+
+        return queryset.none()
 
 
 class AnalyticsMetricsView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsCompanyMember]
 
     def get(self, request):
-        return Response(aggregate_metrics())
+        """Метрики с фильтрацией по компании."""
+        user = request.user
+        company = None
+        if hasattr(user, "profile") and user.profile.company:
+            company = user.profile.company
+        return Response(aggregate_metrics(company=company))
 
 
 class SearchView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsCompanyMember]
 
     def get(self, request):
+        """Поиск с фильтрацией по компании."""
         query = request.query_params.get("q", "")
         if not query:
             return Response({"hits": []})
-        result = search_tickets(query)
+        user = request.user
+        company = None
+        if hasattr(user, "profile") and user.profile.company:
+            company = user.profile.company
+        result = search_tickets(query, company=company)
         return Response(result)
 
 
 class TicketResponseViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = TicketResponse.objects.select_related("ticket", "author").all()
+    queryset = TicketResponse.objects.select_related("ticket", "ticket__company", "author").all()
     serializer_class = TicketResponseSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+
+    def get_queryset(self):
+        """Фильтрация ответов по правам доступа."""
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user.is_authenticated:
+            return queryset.none()
+
+        if hasattr(user, "profile"):
+            profile = user.profile
+            # Супер-администратор видит все ответы
+            if profile.is_superadmin():
+                return queryset
+            # Остальные видят только ответы тикетов своей компании
+            if profile.company:
+                return queryset.filter(ticket__company=profile.company)
+
+        return queryset.none()
 

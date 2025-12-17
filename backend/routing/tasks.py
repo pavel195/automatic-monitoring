@@ -18,18 +18,44 @@ transport_model = TransportIntentModel()
 
 @shared_task
 def classify_message(message_id: str):
+    """Улучшенная классификация с учетом множества факторов."""
     classifier = KeywordClassifier()
     message = ChannelMessage.objects.get(id=message_id)
     text_lower = message.payload.lower()
     result = classifier.predict(message.payload)
     intent = transport_model.predict(message.payload)
 
-    if intent.sentiment == Sentiment.NEGATIVE or any(
-        marker in text_lower for marker in ("задерж", "опазд", "нет поез", "нет автоб")
-    ):
+    # Базовые корректировки приоритета на основе тональности
+    if intent.sentiment == Sentiment.NEGATIVE:
         result.priority = max(result.priority, Ticket.Priority.HIGH)
-    if any(marker in text_lower for marker in ("пожар", "взрыв", "эвакуац", "авари")):
+    elif intent.sentiment == Sentiment.POSITIVE:
+        result.priority = min(result.priority, Ticket.Priority.MEDIUM)
+
+    # Критические маркеры
+    critical_markers = ("пожар", "взрыв", "эвакуац", "авари", "травм", "ранен", "кров", "смерт")
+    if any(marker in text_lower for marker in critical_markers):
         result.priority = Ticket.Priority.CRITICAL
+
+    # Высокий приоритет для задержек и сбоев
+    high_priority_markers = ("задерж", "опазд", "нет поез", "нет автоб", "не работает", "слом", "поломк")
+    if any(marker in text_lower for marker in high_priority_markers):
+        result.priority = max(result.priority, Ticket.Priority.HIGH)
+
+    # Учет времени суток (ночные обращения выше приоритет)
+    received_hour = message.received_at.hour if message.received_at else timezone.now().hour
+    if 22 <= received_hour or received_hour < 6:  # Ночь
+        if result.priority < Ticket.Priority.HIGH:
+            result.priority = min(result.priority + 1, Ticket.Priority.HIGH)
+
+    # История обращений от автора (если есть повторные жалобы - повышаем приоритет)
+    if message.author:
+        recent_complaints = ChannelMessage.objects.filter(
+            author=message.author,
+            sentiment=Sentiment.NEGATIVE,
+            received_at__gte=timezone.now() - timedelta(days=7)
+        ).count()
+        if recent_complaints >= 3:
+            result.priority = max(result.priority, Ticket.Priority.HIGH)
 
     ack_deadline = timezone.now() + timedelta(
         minutes=ACK_SLA_MINUTES[result.priority]
@@ -48,6 +74,7 @@ def classify_message(message_id: str):
         sentiment=intent.sentiment,
         is_transport=intent.is_transport,
         transport_mode=intent.transport_mode or TransportMode.OTHER,
+        company=message.company,  # Устанавливаем компанию из сообщения
     )
     index_ticket(ticket)
     message.ticket = ticket

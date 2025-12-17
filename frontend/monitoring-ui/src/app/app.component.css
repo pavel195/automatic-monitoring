@@ -1,60 +1,97 @@
 .app-toolbar {
-  background: transparent;
-  padding: 0 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.logo mat-icon {
-  color: #f97066;
+  gap: 8px;
+  font-weight: 500;
 }
 
 .spacer {
   flex: 1 1 auto;
 }
 
+.active-link {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .hero {
-  padding: 4rem 2rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
 }
 
 .hero__content {
-  max-width: 720px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.875rem;
+  opacity: 0.9;
+  margin-bottom: 1rem;
 }
 
 .hero h1 {
-  font-size: 2.75rem;
-  margin: 0.5rem 0 1rem;
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
 }
 
-.hero .eyebrow {
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
-}
-
-.hero .subtitle {
-  color: var(--text-muted);
-  max-width: 580px;
+.subtitle {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
 }
 
 .hero__actions {
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .content {
-  padding: 0 2rem 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-.active-link {
-  font-weight: 600;
+.login-page {
+  max-width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
 }
 
+.user-menu-header {
+  padding: 1rem;
+  min-width: 200px;
+}
+
+.user-name {
+  font-weight: 500;
+  margin: 0 0 0.25rem 0;
+}
+
+.user-email {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0 0 0.5rem 0;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
+  text-transform: capitalize;
+}

@@ -2,6 +2,7 @@ import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
 import { ApiService, Ticket } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { Subscription } from 'rxjs';
@@ -9,7 +10,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-tickets-board',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatChipsModule],
+  imports: [CommonModule, MatTableModule, MatChipsModule, MatIconModule],
   templateUrl: './tickets-board.component.html',
   styleUrls: ['./tickets-board.component.css'],
 })
@@ -60,6 +61,7 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
     'sentiment',
     'status',
     'group',
+    'created_at',
   ];
   tickets: Ticket[] = [];
   private subscription = new Subscription();
@@ -81,8 +83,18 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
   }
 
   loadTickets() {
-    this.api.getTickets().subscribe((data: any) => {
-      this.tickets = Array.isArray(data) ? data : data.results;
+    this.api.getTickets().subscribe({
+      next: (data: any) => {
+        this.tickets = Array.isArray(data) ? data : data.results || [];
+      },
+      error: (err) => {
+        console.error('Ошибка загрузки тикетов:', err);
+        this.tickets = [];
+        // Если ошибка авторизации, можно перенаправить на логин
+        if (err.status === 401 || err.status === 403) {
+          // Обработка будет в guard
+        }
+      },
     });
   }
 
@@ -93,11 +105,60 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
   priorityColor(priority: number): string {
     switch (priority) {
       case 4:
-        return 'warn';
+        return 'warn'; // Критический - красный
       case 3:
-        return 'accent';
+        return 'accent'; // Высокий - оранжевый
+      case 2:
+        return 'primary'; // Средний - синий
+      case 1:
+        return 'primary'; // Низкий - синий
       default:
         return 'primary';
+    }
+  }
+
+  priorityLabel(priority: number): string {
+    switch (priority) {
+      case 4:
+        return 'Критический';
+      case 3:
+        return 'Высокий';
+      case 2:
+        return 'Средний';
+      case 1:
+        return 'Низкий';
+      default:
+        return `${priority}`;
+    }
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) {
+      return '—';
+    }
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) {
+      return 'только что';
+    } else if (diffMins < 60) {
+      return `${diffMins} мин. назад`;
+    } else if (diffHours < 24) {
+      return `${diffHours} ч. назад`;
+    } else if (diffDays < 7) {
+      return `${diffDays} дн. назад`;
+    } else {
+      return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     }
   }
 

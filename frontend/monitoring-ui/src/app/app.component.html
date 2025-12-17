@@ -4,38 +4,77 @@
     <span>{{ title }}</span>
   </div>
   <span class="spacer"></span>
-  <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
-    Дэшборд
-  </a>
-  <a mat-button routerLink="/tickets" routerLinkActive="active-link">Обращения</a>
-  <a mat-button routerLink="/analytics" routerLinkActive="active-link">Аналитика</a>
-  <button mat-raised-button color="accent" routerLink="/tickets">
-    <mat-icon>flash_on</mat-icon>
-    Реагировать
-  </button>
+  <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
+    <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+      Дэшборд
+    </a>
+    <a mat-button routerLink="/tickets" routerLinkActive="active-link">Обращения</a>
+    <a mat-button routerLink="/analytics" routerLinkActive="active-link">Аналитика</a>
+    <button mat-raised-button color="accent" routerLink="/tickets">
+      <mat-icon>flash_on</mat-icon>
+      Реагировать
+    </button>
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header" *ngIf="currentUser$ | async as user">
+        <p class="user-name">{{ user.first_name || user.username }}</p>
+        <p class="user-email">{{ user.email }}</p>
+        <p class="user-role" *ngIf="currentProfile$ | async as profile">
+          {{ profile.role === 'superadmin' ? 'Супер-администратор' : 
+             profile.role === 'company_admin' ? 'Администратор компании' : 
+             'Оператор' }}
+        </p>
+      </div>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Выйти</span>
+      </button>
+    </mat-menu>
+  </ng-container>
+  <ng-template #notAuthenticated>
+    <button mat-button routerLink="/register">
+      <mat-icon>person_add</mat-icon>
+      Регистрация
+    </button>
+    <button mat-button routerLink="/login">
+      <mat-icon>login</mat-icon>
+      Войти
+    </button>
+  </ng-template>
 </mat-toolbar>
 
-<section class="hero">
-  <div class="hero__content">
-    <p class="eyebrow">Единый центр управления транспортом</p>
-    <h1>Мониторинг обращений и SLA в реальном времени</h1>
-    <p class="subtitle">
-      Автоматический сбор из Telegram, маршрутизация по критичности и быстрые ответы пассажирам.
-    </p>
-    <div class="hero__actions">
-      <button mat-flat-button color="accent" routerLink="/tickets">
-        <mat-icon>support_agent</mat-icon>
-        Перейти к инцидентам
-      </button>
-      <button mat-stroked-button color="primary" routerLink="/analytics">
-        <mat-icon>insights</mat-icon>
-        Аналитика SLA
-      </button>
+<ng-container *ngIf="isAuthenticated$ | async; else showLoginPage">
+  <section class="hero">
+    <div class="hero__content">
+      <p class="eyebrow">Единый центр управления транспортом</p>
+      <h1>Мониторинг обращений и SLA в реальном времени</h1>
+      <p class="subtitle">
+        Автоматический сбор из Telegram, маршрутизация по критичности и быстрые ответы пассажирам.
+      </p>
+      <div class="hero__actions">
+        <button mat-flat-button color="accent" routerLink="/tickets">
+          <mat-icon>support_agent</mat-icon>
+          Перейти к инцидентам
+        </button>
+        <button mat-stroked-button color="primary" routerLink="/analytics">
+          <mat-icon>insights</mat-icon>
+          Аналитика SLA
+        </button>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<main class="content">
-  <router-outlet></router-outlet>
-</main>
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</ng-container>
+
+<ng-template #showLoginPage>
+  <main class="content login-page">
+    <router-outlet></router-outlet>
+  </main>
+</ng-template>
 

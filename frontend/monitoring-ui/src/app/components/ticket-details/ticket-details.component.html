@@ -35,6 +35,18 @@
           {{ ticket.resolve_deadline | date: 'short' }}
         </p>
       </div>
+      <div>
+        <p class="label">Дата создания</p>
+        <p class="value">
+          {{ formatDate(ticket.created_at) }}
+        </p>
+      </div>
+      <div *ngIf="ticket.updated_at">
+        <p class="label">Последнее обновление</p>
+        <p class="value">
+          {{ formatDate(ticket.updated_at) }}
+        </p>
+      </div>
     </mat-card-content>
     <mat-card-actions>
       <button mat-stroked-button color="primary" (click)="acknowledge()">

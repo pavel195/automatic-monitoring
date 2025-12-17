@@ -1,14 +1,43 @@
 .tickets {
   width: 100%;
+}
+
+.tickets th {
+  font-weight: 600;
+}
+
+.tickets td {
   cursor: pointer;
 }
 
-mat-chip {
-  text-transform: capitalize;
+.tickets tr:hover {
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
-.mat-mdc-chip.is-transport {
-  background-color: rgba(49, 46, 129, 0.35);
-  color: #f8fafc;
+.is-transport {
+  background-color: #e3f2fd;
 }
 
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.875rem;
+}

@@ -20,6 +20,7 @@ def index_ticket(ticket) -> None:
         "priority": ticket.priority,
         "status": ticket.status,
         "assigned_group": ticket.assigned_group,
+        "company_id": ticket.company_id if ticket.company else None,
         "ack_deadline": ticket.ack_deadline.isoformat()
         if ticket.ack_deadline
         else None,
@@ -35,16 +36,26 @@ def index_ticket(ticket) -> None:
         logger.error("Не удалось проиндексировать тикет %s: %s", ticket.id, exc)
 
 
-def search_tickets(query: str) -> Dict[str, Any]:
+def search_tickets(query: str, company=None) -> Dict[str, Any]:
+    """Поиск тикетов с опциональной фильтрацией по компании."""
     try:
+        search_query = {
+            "multi_match": {
+                "query": query,
+                "fields": ["title^2", "category", "status"],
+            }
+        }
+        # Добавляем фильтр по компании, если указана
+        if company:
+            search_query = {
+                "bool": {
+                    "must": [search_query],
+                    "filter": [{"term": {"company_id": company.id}}],
+                }
+            }
         response = _client().search(
             index=INDEX_NAME,
-            query={
-                "multi_match": {
-                    "query": query,
-                    "fields": ["title^2", "category", "status"],
-                }
-            },
+            query=search_query,
         )
         return response
     except Exception as exc:  # pragma: no cover

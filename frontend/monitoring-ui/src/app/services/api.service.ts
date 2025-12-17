@@ -34,6 +34,8 @@ export interface Ticket {
   assigned_group: string;
   ack_deadline: string;
   resolve_deadline: string;
+  created_at: string;
+  updated_at: string;
   messages?: ChannelMessage[];
   responses?: TicketResponse[];
 }
@@ -45,9 +47,8 @@ export class ApiService {
   constructor(private readonly http: HttpClient) {}
 
   getTickets(): Observable<{ results: Ticket[] } | Ticket[]> {
-    return this.http.get<{ results: Ticket[] } | Ticket[]>(
-      `${this.base}/tickets/`
-    );
+    // Токен добавляется через interceptor
+    return this.http.get<{ results: Ticket[] } | Ticket[]>(`${this.base}/tickets/`);
   }
 
   acknowledgeTicket(id: number): Observable<Ticket> {
@@ -59,9 +60,7 @@ export class ApiService {
   }
 
   respondTicket(id: number, body: string): Observable<TicketResponse> {
-    return this.http.post<TicketResponse>(`${this.base}/tickets/${id}/respond/`, {
-      body,
-    });
+    return this.http.post<TicketResponse>(`${this.base}/tickets/${id}/respond/`, { body });
   }
 
   getMetrics(): Observable<any> {

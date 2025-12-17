@@ -6,11 +6,14 @@ from django.utils import timezone
 from tickets.models import ChannelMessage, Ticket
 
 
-def aggregate_metrics():
+def aggregate_metrics(company=None):
+    """Агрегация метрик с опциональной фильтрацией по компании."""
     now = timezone.now()
     last_day = now - timedelta(days=1)
 
     queryset = Ticket.objects.filter(created_at__gte=last_day)
+    if company:
+        queryset = queryset.filter(company=company)
     resolved = queryset.exclude(resolved_at__isnull=True)
 
     mtta = queryset.exclude(acknowledged_at__isnull=True).aggregate(
@@ -51,6 +54,8 @@ def aggregate_metrics():
     )
 
     channel_queryset = ChannelMessage.objects.filter(received_at__gte=last_day)
+    if company:
+        channel_queryset = channel_queryset.filter(company=company)
     channel_breakdown = (
         channel_queryset.values("channel")
         .annotate(total=Count("id"))

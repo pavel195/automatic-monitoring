@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15
@@ -59,6 +57,7 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
+      - /app/backend/__pycache__
     depends_on:
       - postgres
       - redis
@@ -104,6 +103,9 @@ services:
     env_file: .env
     ports:
       - "4200:4200"
+    volumes:
+      - ./frontend/monitoring-ui:/app/frontend
+      - /app/frontend/node_modules
     depends_on:
       - backend
     networks:

@@ -1,0 +1,101 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    <mat-card-title>
+      <mat-icon>business</mat-icon>
+      Регистрация компании
+    </mat-card-title>
+    <mat-card-content>
+      <div *ngIf="success; else registerForm">
+        <div class="success-message">
+          <mat-icon>check_circle</mat-icon>
+          <h3>Регистрация успешна!</h3>
+          <p>Ваша компания отправлена на модерацию. После одобрения вы сможете войти в систему.</p>
+          <p>Перенаправление на страницу входа...</p>
+        </div>
+      </div>
+
+      <ng-template #registerForm>
+        <form (ngSubmit)="onSubmit()" #registerFormRef="ngForm">
+          <div class="info-message" *ngIf="!error && !loading">
+            <mat-icon>info</mat-icon>
+            <span>Заполните форму для регистрации компании. Поля, отмеченные *, обязательны для заполнения.</span>
+          </div>
+          
+          <h3>Информация о компании</h3>
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('name')">
+            <mat-label>Название компании *</mat-label>
+            <input matInput [(ngModel)]="companyName" name="companyName" required />
+            <mat-error *ngIf="hasFieldError('name')">{{ getFieldError('name') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('description')">
+            <mat-label>Описание</mat-label>
+            <textarea matInput [(ngModel)]="description" name="description" rows="3"></textarea>
+            <mat-error *ngIf="hasFieldError('description')">{{ getFieldError('description') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('contact_email')">
+            <mat-label>Контактный email *</mat-label>
+            <input matInput type="email" [(ngModel)]="contactEmail" name="contactEmail" required />
+            <mat-error *ngIf="hasFieldError('contact_email')">{{ getFieldError('contact_email') }}</mat-error>
+            <mat-hint *ngIf="!hasFieldError('contact_email')">Например: info&#64;company.com</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('contact_phone')">
+            <mat-label>Контактный телефон</mat-label>
+            <input matInput [(ngModel)]="contactPhone" name="contactPhone" />
+            <mat-error *ngIf="hasFieldError('contact_phone')">{{ getFieldError('contact_phone') }}</mat-error>
+          </mat-form-field>
+
+          <h3>Администратор компании</h3>
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('admin_email')">
+            <mat-label>Email администратора *</mat-label>
+            <input matInput type="email" [(ngModel)]="adminEmail" name="adminEmail" required />
+            <mat-error *ngIf="hasFieldError('admin_email')">{{ getFieldError('admin_email') }}</mat-error>
+            <mat-hint *ngIf="!hasFieldError('admin_email')">Будет использован как логин</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('admin_password')">
+            <mat-label>Пароль *</mat-label>
+            <input matInput type="password" [(ngModel)]="adminPassword" name="adminPassword" required minlength="8" />
+            <mat-error *ngIf="hasFieldError('admin_password')">{{ getFieldError('admin_password') }}</mat-error>
+            <mat-hint *ngIf="!hasFieldError('admin_password')">Минимум 8 символов</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('admin_first_name')">
+            <mat-label>Имя</mat-label>
+            <input matInput [(ngModel)]="adminFirstName" name="adminFirstName" />
+            <mat-error *ngIf="hasFieldError('admin_first_name')">{{ getFieldError('admin_first_name') }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('admin_last_name')">
+            <mat-label>Фамилия</mat-label>
+            <input matInput [(ngModel)]="adminLastName" name="adminLastName" />
+            <mat-error *ngIf="hasFieldError('admin_last_name')">{{ getFieldError('admin_last_name') }}</mat-error>
+          </mat-form-field>
+
+          <div class="error-message" *ngIf="error">
+            <mat-icon>error</mat-icon>
+            <span>{{ error }}</span>
+          </div>
+
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            class="full-width"
+            [disabled]="loading"
+          >
+            <mat-icon *ngIf="!loading">person_add</mat-icon>
+            {{ loading ? 'Регистрация...' : 'Зарегистрировать компанию' }}
+          </button>
+
+          <div class="login-link">
+            <p>Уже есть аккаунт? <a routerLink="/login">Войти</a></p>
+          </div>
+        </form>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+</div>
+

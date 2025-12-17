@@ -21,4 +21,4 @@ frontend/monitoring-ui/dist/
 .idea/
 .vscode/
 *.code-workspace
-
+.Angular

@@ -55,6 +55,14 @@ class ChannelMessage(models.Model):
         blank=True,
         related_name="messages",
     )
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="messages",
+        verbose_name="Компания",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:  # pragma: no cover - удобное представление
@@ -69,6 +77,8 @@ class Ticket(models.Model):
         PRAISE = "praise", "Благодарность"
         REQUEST = "request", "Запрос информации"
         INCIDENT = "incident", "Инцидент"
+        SUGGESTION = "suggestion", "Предложение"
+        PAYMENT = "payment", "Вопрос по оплате"
 
     class Priority(models.IntegerChoices):
         LOW = 1, "Низкий"
@@ -107,6 +117,14 @@ class Ticket(models.Model):
     )
     assigned_to = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tickets",
+        verbose_name="Компания",
     )
     ack_deadline = models.DateTimeField(null=True, blank=True)
     resolve_deadline = models.DateTimeField(null=True, blank=True)

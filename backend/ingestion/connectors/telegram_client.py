@@ -37,15 +37,33 @@ class TelegramConnector(BaseConnector):
         ["Запрос информации", "Благодарность"],
     ]
 
-    def __init__(self):
-        self.token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    def __init__(self, bot_token=None, chat_ids=None, discussion_chat_ids=None, allow_private=False):
+        """Инициализация коннектора с параметрами бота.
+        
+        Args:
+            bot_token: Токен бота (если не указан, берется из env)
+            chat_ids: Список ID чатов для мониторинга
+            discussion_chat_ids: Список ID чатов для обсуждений
+            allow_private: Разрешить личные сообщения
+        """
+        self.token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN", "")
+        if chat_ids is None:
         monitor_ids = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
+            self.chat_ids = self._parse_chat_ids(monitor_ids)
+        else:
+            self.chat_ids = set(str(cid) for cid in chat_ids) if chat_ids else set()
+        
+        if discussion_chat_ids is None:
         discussion_ids = os.getenv("TELEGRAM_DISCUSSION_CHAT_IDS", "")
-        self.allow_private = os.getenv("TELEGRAM_ALLOW_DIRECT", "0") in ("1", "true")
-        self.chat_ids = self._parse_chat_ids(monitor_ids)
         self.discussion_chat_ids = self._parse_chat_ids(discussion_ids)
+        else:
+            self.discussion_chat_ids = set(str(cid) for cid in discussion_chat_ids) if discussion_chat_ids else set()
+        
+        self.allow_private = allow_private or os.getenv("TELEGRAM_ALLOW_DIRECT", "0") in ("1", "true")
         self.api_url = f"https://api.telegram.org/bot{self.token}"
-        self.offset_key = "ingestion:telegram_offset"
+        # Уникальный ключ для offset каждого бота
+        bot_id = self.token[:10] if self.token else "default"
+        self.offset_key = f"ingestion:telegram_offset:{bot_id}"
         self._offset = 0
         self.redis = None
         self._init_state_store()
