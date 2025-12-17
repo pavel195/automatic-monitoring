@@ -115,13 +115,12 @@
       </app-tickets-board>
     </div>
     <app-ticket-details [ticket]="selected"></app-ticket-details>
-      <mat-card>
-        <div class="empty-details-content">
-          <mat-icon>info</mat-icon>
-          <h3>Выберите обращение</h3>
-          <p>Кликните на обращение в списке, чтобы просмотреть детали</p>
-        </div>
-      </mat-card>
-    </div>
+    <mat-card *ngIf="!selected">
+      <div class="empty-details-content">
+        <mat-icon>info</mat-icon>
+        <h3>Выберите обращение</h3>
+        <p>Кликните на обращение в списке, чтобы просмотреть детали</p>
+      </div>
+    </mat-card>
   </div>
 </div>
