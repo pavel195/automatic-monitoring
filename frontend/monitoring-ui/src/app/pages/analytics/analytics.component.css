@@ -3,6 +3,61 @@
   padding: 2rem;
   max-width: 1600px;
   margin: 0 auto;
+  color: var(--text-primary);
+}
+
+/* Белый текст для всех элементов */
+.analytics-page * {
+  color: var(--text-primary);
+}
+
+/* Принудительно белый цвет для всех текстовых элементов */
+.analytics-page p,
+.analytics-page span,
+.analytics-page div,
+.analytics-page h1,
+.analytics-page h2,
+.analytics-page h3,
+.analytics-page h4,
+.analytics-page h5,
+.analytics-page h6,
+.analytics-page label,
+.analytics-page mat-card,
+.analytics-page mat-card * {
+  color: inherit;
+}
+
+/* Убеждаемся, что все текстовые элементы белые */
+.analytics-page mat-card-title,
+.analytics-page mat-card-subtitle,
+.analytics-page .mat-mdc-card-title,
+.analytics-page .mat-mdc-card-subtitle {
+  color: white !important;
+}
+
+/* Material компоненты на странице аналитики */
+::ng-deep .analytics-page .mat-mdc-card,
+::ng-deep .analytics-page .mat-mdc-card * {
+  color: inherit;
+}
+
+::ng-deep .analytics-page .mat-mdc-card .mat-mdc-card-title,
+::ng-deep .analytics-page .mat-mdc-card .mat-mdc-card-subtitle,
+::ng-deep .analytics-page .mat-mdc-card-header .mat-mdc-card-title,
+::ng-deep .analytics-page .mat-mdc-card-header .mat-mdc-card-subtitle {
+  color: white !important;
+}
+
+/* Все кнопки и их текст */
+::ng-deep .analytics-page button,
+::ng-deep .analytics-page .mat-mdc-button,
+::ng-deep .analytics-page .mat-mdc-stroked-button {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+::ng-deep .analytics-page button span,
+::ng-deep .analytics-page .mat-mdc-button span {
+  color: inherit !important;
 }
 
 /* Заголовок страницы */
@@ -19,12 +74,12 @@
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .page-subtitle {
   margin: 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
   font-size: 1rem;
 }
 
@@ -37,7 +92,7 @@
 
 .time-filters button {
   border-color: rgba(71, 85, 105, 0.4);
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.9) !important;
   transition: all 0.2s ease;
 }
 
@@ -155,7 +210,7 @@
 .kpi-label {
   margin: 0 0 0.5rem 0;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 500;
@@ -165,14 +220,14 @@
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
   line-height: 1.2;
 }
 
 .kpi-change {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7) !important;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -209,13 +264,13 @@
   margin: 0 0 0.25rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .card-subtitle {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Статусы */
@@ -258,7 +313,7 @@
 .status-label {
   margin: 0 0 0.25rem 0;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -267,13 +322,13 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .status-percent {
   margin: 0.25rem 0 0 0;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .status-chart {
@@ -330,14 +385,14 @@
 .sla-label {
   margin: 0 0 0.5rem 0;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .sla-content h3 {
   margin: 0 0 0.75rem 0;
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .sla-progress {
@@ -440,7 +495,7 @@
 }
 
 .sentiment-icon mat-icon {
-  color: var(--text-primary);
+  color: white !important;
   font-size: 24px;
   width: 24px;
   height: 24px;
@@ -454,7 +509,7 @@
 .sentiment-label {
   margin: 0 0 0.25rem 0;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -463,13 +518,13 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .sentiment-percent {
   margin: 0.25rem 0 0 0;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* Каналы */
@@ -521,7 +576,7 @@
   margin: 0 0 0.5rem 0;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .channel-bar {
@@ -540,7 +595,7 @@
 .channel-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
   min-width: 50px;
   text-align: right;
 }
@@ -598,7 +653,7 @@
   margin: 0 0 0.5rem 0;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: white !important;
 }
 
 .topic-bar {
@@ -618,7 +673,7 @@
 .topic-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white !important;
   min-width: 50px;
   text-align: right;
 }
@@ -627,7 +682,7 @@
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .empty-state mat-icon {
@@ -642,6 +697,73 @@
 .empty-state p {
   margin: 0;
   font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Стили для ngx-charts - белый текст на всех графиках */
+::ng-deep .analytics-page ngx-charts-bar-vertical .ngx-charts,
+::ng-deep .analytics-page ngx-charts-bar-horizontal .ngx-charts,
+::ng-deep .analytics-page ngx-charts-pie-chart .ngx-charts,
+::ng-deep .analytics-page ngx-charts-pie-grid .ngx-charts,
+::ng-deep .analytics-page ngx-charts-advanced-pie-chart .ngx-charts {
+  color: white !important;
+}
+
+/* Оси и подписи на графиках */
+::ng-deep .analytics-page .ngx-charts text,
+::ng-deep .analytics-page .ngx-charts .tick text,
+::ng-deep .analytics-page .ngx-charts .axis text,
+::ng-deep .analytics-page .ngx-charts .x-axis text,
+::ng-deep .analytics-page .ngx-charts .y-axis text,
+::ng-deep .analytics-page .ngx-charts .axis-label text,
+::ng-deep .analytics-page .ngx-charts .label text,
+::ng-deep .analytics-page .ngx-charts .legend-label text,
+::ng-deep .analytics-page .ngx-charts .legend-title text {
+  fill: white !important;
+  color: white !important;
+}
+
+/* Сетка на графиках */
+::ng-deep .analytics-page .ngx-charts .gridline,
+::ng-deep .analytics-page .ngx-charts .grid-line,
+::ng-deep .analytics-page .ngx-charts .grid-panel line {
+  stroke: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Оси на графиках */
+::ng-deep .analytics-page .ngx-charts .axis line,
+::ng-deep .analytics-page .ngx-charts .axis path {
+  stroke: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Легенда */
+::ng-deep .analytics-page .ngx-charts .legend-labels,
+::ng-deep .analytics-page .ngx-charts .legend-label,
+::ng-deep .analytics-page .ngx-charts .legend-title {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Подписи на круговых диаграммах */
+::ng-deep .analytics-page .ngx-charts .pie-label,
+::ng-deep .analytics-page .ngx-charts .pie-label text,
+::ng-deep .analytics-page .ngx-charts .pie-arc-label text {
+  fill: white !important;
+  color: white !important;
+}
+
+/* Все SVG текстовые элементы */
+::ng-deep .analytics-page svg text {
+  fill: white !important;
+  color: white !important;
+}
+
+/* Все текстовые элементы внутри контейнеров графиков */
+::ng-deep .analytics-page .chart-container text,
+::ng-deep .analytics-page .chart-container-small text,
+::ng-deep .analytics-page .status-chart text {
+  fill: white !important;
+  color: white !important;
 }
 
 /* Адаптивность */
@@ -659,8 +781,8 @@
 @media (max-width: 768px) {
   .analytics-page {
     padding: 1rem;
-  }
-  
+}
+
   .kpi-section {
     grid-template-columns: 1fr;
   }

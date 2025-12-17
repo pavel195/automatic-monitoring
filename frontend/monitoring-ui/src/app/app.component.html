@@ -6,7 +6,7 @@
   <span class="spacer"></span>
   <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
     <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
-      Дэшборд
+      Главная
     </a>
     <a mat-button routerLink="/tickets" routerLinkActive="active-link">Обращения</a>
     <a mat-button routerLink="/analytics" routerLinkActive="active-link">Аналитика</a>

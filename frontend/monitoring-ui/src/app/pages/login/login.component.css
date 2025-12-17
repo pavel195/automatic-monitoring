@@ -49,6 +49,77 @@
   margin-bottom: 1rem;
 }
 
+/* Белые метки для полей ввода */
+::ng-deep .login-card .mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  color: white;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mat-mdc-floating-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mat-mdc-floating-label.mdc-floating-label--float-above {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mat-mdc-input-element {
+  color: white !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mat-mdc-form-field-input-control input {
+  color: white !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mat-mdc-text-field-wrapper .mat-mdc-form-field-input-control input {
+  color: white !important;
+}
+
+/* Стили для меток (labels) */
+::ng-deep .login-card .mat-mdc-form-field label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mdc-floating-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mdc-floating-label--float-above {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Стили для placeholder */
+::ng-deep .login-card .mat-mdc-form-field input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field input::-webkit-input-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field input:-ms-input-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+::ng-deep .login-card .mat-mdc-outlined-button:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+::ng-deep .login-card .mat-mdc-form-field .mdc-notched-outline__leading,
+::ng-deep .login-card .mat-mdc-form-field .mdc-notched-outline__notch,
+::ng-deep .login-card .mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+::ng-deep .login-card .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+::ng-deep .login-card .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--accent-orange) !important;
+}
+
 .error {
   color: #EF4444;
   margin: 1rem 0;

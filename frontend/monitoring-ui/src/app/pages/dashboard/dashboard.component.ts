@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { ApiService, Ticket } from '../../services/api.service';
-import { TicketsBoardComponent } from '../../components/tickets-board/tickets-board.component';
-import { AnalyticsChartsComponent } from '../../components/analytics-charts/analytics-charts.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     MatCardModule,
     MatIconModule,
-    TicketsBoardComponent,
-    AnalyticsChartsComponent,
+    MatButtonModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
@@ -24,7 +24,6 @@ export class DashboardComponent implements OnInit {
   latestTickets: Ticket[] = [];
   loading = true;
   sentimentStats: { label: string; percent: number; color: string }[] = [];
-  transportShare = 0;
 
   private sentimentLabels: Record<string, string> = {
     positive: 'Позитив',
@@ -46,9 +45,14 @@ export class DashboardComponent implements OnInit {
     request: 'Запрос',
     incident: 'Инцидент',
     praise: 'Благодарность',
+    suggestion: 'Предложение',
+    payment: 'Оплата',
   };
 
-  constructor(private readonly api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly router: Router
+  ) {}
 
   ngOnInit() {
     this.loadData();
@@ -58,7 +62,6 @@ export class DashboardComponent implements OnInit {
     this.api.getMetrics().subscribe({
       next: (metrics) => {
         this.metrics = metrics;
-        this.transportShare = metrics?.transport_share || 0;
         this.sentimentStats = this.buildSentimentStats(
           metrics?.sentiment_breakdown || []
         );
@@ -73,7 +76,7 @@ export class DashboardComponent implements OnInit {
     this.api.getTickets().subscribe({
       next: (data: any) => {
         const tickets = Array.isArray(data) ? data : data.results || [];
-        this.latestTickets = tickets.slice(0, 4);
+        this.latestTickets = tickets.slice(0, 5);
         this.loading = false;
       },
       error: (err) => {
@@ -87,12 +90,26 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  getResolvedPercentage(): number {
+    if (!this.metrics?.total) return 0;
+    return Math.round((this.metrics.resolved / this.metrics.total) * 100);
+  }
+
   priorityLabel(priority: number): string {
     return ['—', 'Низкий', 'Средний', 'Высокий', 'Критический'][priority] || '—';
   }
 
   sentimentChip(sentiment: string): string {
     return this.sentimentLabels[sentiment] || 'Нейтрально';
+  }
+
+  getSentimentIcon(label: string): string {
+    const icons: Record<string, string> = {
+      'Позитив': 'sentiment_satisfied',
+      'Нейтрально': 'sentiment_neutral',
+      'Негатив': 'sentiment_dissatisfied',
+    };
+    return icons[label] || 'help';
   }
 
   topicLabel(ticket: Ticket): string {
@@ -102,6 +119,12 @@ export class DashboardComponent implements OnInit {
     return this.categoryLabels[ticket.category] || ticket.category;
   }
 
+  navigateToTickets(): void {
+    this.router.navigate(['/tickets']).catch(err => {
+      console.error('Ошибка навигации:', err);
+    });
+  }
+
   private buildSentimentStats(data: any[]): {
     label: string;
     percent: number;
@@ -109,15 +132,14 @@ export class DashboardComponent implements OnInit {
   }[] {
     const total = data.reduce((acc, item) => acc + item.total, 0) || 1;
     const palette: Record<string, string> = {
-      positive: '#22d3ee',
-      neutral: '#94a3b8',
-      negative: '#f97066',
+      positive: '#10B981',
+      neutral: '#94A3B8',
+      negative: '#EF4444',
     };
     return data.map((item) => ({
       label: this.sentimentLabels[item.sentiment] || item.sentiment,
       percent: Math.round((item.total / total) * 100),
-      color: palette[item.sentiment] || '#94a3b8',
+      color: palette[item.sentiment] || '#94A3B8',
     }));
   }
 }
-

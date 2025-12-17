@@ -17,6 +17,7 @@
   margin-top: 0;
   margin-bottom: 0.75rem;
   font-weight: 600;
+  color: white !important;
 }
 
 .chart-header {
@@ -32,7 +33,7 @@
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.15em;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .pills {
@@ -46,28 +47,68 @@
   font-size: 0.75rem;
   border-radius: 999px;
   border: 1px solid rgba(71, 85, 105, 0.4);
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8) !important;
   background: rgba(30, 41, 59, 0.4);
 }
 
+/* Белый текст для всех элементов графиков */
 :host ::ng-deep .ngx-charts text {
-  fill: var(--text-primary);
+  fill: white !important;
+  color: white !important;
   font-family: 'Inter', sans-serif;
 }
 
+:host ::ng-deep .ngx-charts .tick text,
+:host ::ng-deep .ngx-charts .axis text,
+:host ::ng-deep .ngx-charts .x-axis text,
+:host ::ng-deep .ngx-charts .y-axis text,
+:host ::ng-deep .ngx-charts .axis-label text,
+:host ::ng-deep .ngx-charts .label text,
+:host ::ng-deep .ngx-charts .legend-label text,
+:host ::ng-deep .ngx-charts .legend-title text,
+:host ::ng-deep .ngx-charts .pie-label text,
+:host ::ng-deep .ngx-charts .pie-arc-label text {
+  fill: white !important;
+  color: white !important;
+}
+
 :host ::ng-deep .ngx-charts .gridline-path {
-  stroke: rgba(71, 85, 105, 0.3);
+  stroke: rgba(255, 255, 255, 0.2) !important;
 }
 
 :host ::ng-deep .ngx-charts .axis path,
 :host ::ng-deep .ngx-charts .axis line {
-  stroke: rgba(71, 85, 105, 0.4);
+  stroke: rgba(255, 255, 255, 0.3) !important;
+}
+
+:host ::ng-deep .ngx-charts .gridline,
+:host ::ng-deep .ngx-charts .grid-line,
+:host ::ng-deep .ngx-charts .grid-panel line {
+  stroke: rgba(255, 255, 255, 0.2) !important;
 }
 
 :host ::ng-deep .ngx-tooltip-content {
   background: rgba(15, 23, 42, 0.95) !important;
-  color: var(--text-primary) !important;
+  color: white !important;
   border: 1px solid rgba(71, 85, 105, 0.4);
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.5);
+}
+
+:host ::ng-deep .ngx-tooltip-content * {
+  color: white !important;
+}
+
+/* Легенда */
+:host ::ng-deep .ngx-charts .legend-labels,
+:host ::ng-deep .ngx-charts .legend-label,
+:host ::ng-deep .ngx-charts .legend-title {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Все SVG текстовые элементы */
+:host ::ng-deep svg text {
+  fill: white !important;
+  color: white !important;
 }
 
