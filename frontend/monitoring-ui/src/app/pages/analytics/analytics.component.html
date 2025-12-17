@@ -1,15 +1,320 @@
-<section class="analytics-summary" *ngIf="summaryCards.length">
-  <mat-card *ngFor="let card of summaryCards">
-    <div class="card-icon">
-      <mat-icon>{{ card.icon }}</mat-icon>
-    </div>
+<!-- Профессиональная аналитическая панель для бизнеса -->
+<div class="analytics-page">
+  <!-- Заголовок с фильтрами времени -->
+  <div class="page-header">
     <div>
-      <p class="label">{{ card.label }}</p>
-      <h2>{{ card.value }}</h2>
-      <p class="subtitle">{{ card.subtitle }}</p>
+      <h1>Аналитика и отчёты</h1>
+      <p class="page-subtitle">Детальный анализ обращений и производительности</p>
     </div>
-  </mat-card>
-</section>
+    <div class="time-filters">
+      <button 
+        mat-stroked-button 
+        [class.active]="selectedPeriod === '24h'"
+        (click)="selectPeriod('24h')">
+        <mat-icon>schedule</mat-icon>
+        24 часа
+      </button>
+      <button 
+        mat-stroked-button 
+        [class.active]="selectedPeriod === '7d'"
+        (click)="selectPeriod('7d')">
+        <mat-icon>calendar_today</mat-icon>
+        7 дней
+      </button>
+      <button 
+        mat-stroked-button 
+        [class.active]="selectedPeriod === '30d'"
+        (click)="selectPeriod('30d')">
+        <mat-icon>date_range</mat-icon>
+        30 дней
+      </button>
+    </div>
+  </div>
 
-<app-analytics-charts [metrics]="metrics"></app-analytics-charts>
+  <!-- KPI метрики -->
+  <section class="kpi-section">
+    <mat-card class="kpi-card kpi-primary">
+      <div class="kpi-icon kpi-icon-primary">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <p class="kpi-label">Всего обращений</p>
+        <h2 class="kpi-value">{{ metrics?.total || 0 }}</h2>
+        <p class="kpi-change positive" *ngIf="metrics?.total">
+          <mat-icon>arrow_upward</mat-icon>
+          За выбранный период
+        </p>
+      </div>
+    </mat-card>
 
+    <mat-card class="kpi-card kpi-success">
+      <div class="kpi-icon kpi-icon-success">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <p class="kpi-label">Решено</p>
+        <h2 class="kpi-value">{{ metrics?.resolved || 0 }}</h2>
+        <p class="kpi-change">
+          {{ getResolvedPercentage() }}% от общего числа
+        </p>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi-card kpi-warning">
+      <div class="kpi-icon kpi-icon-warning">
+        <mat-icon>schedule</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <p class="kpi-label">Среднее время реакции</p>
+        <h2 class="kpi-value">{{ formatDuration(metrics?.mtta_seconds) }}</h2>
+        <p class="kpi-change">
+          MTTA (Mean Time To Acknowledge)
+        </p>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi-card kpi-info">
+      <div class="kpi-icon kpi-icon-info">
+        <mat-icon>timer</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <p class="kpi-label">Среднее время решения</p>
+        <h2 class="kpi-value">{{ formatDuration(metrics?.mttr_seconds) }}</h2>
+        <p class="kpi-change">
+          MTTR (Mean Time To Resolve)
+        </p>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi-card kpi-accent">
+      <div class="kpi-icon kpi-icon-accent">
+        <mat-icon>train</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <p class="kpi-label">Транспортные обращения</p>
+        <h2 class="kpi-value">{{ metrics?.transport_total || 0 }}</h2>
+        <p class="kpi-change">
+          {{ getTransportPercentage() }}% от всех обращений
+        </p>
+      </div>
+    </mat-card>
+
+    <mat-card class="kpi-card kpi-secondary">
+      <div class="kpi-icon kpi-icon-secondary">
+        <mat-icon>forum</mat-icon>
+      </div>
+      <div class="kpi-content">
+        <p class="kpi-label">Сообщений получено</p>
+        <h2 class="kpi-value">{{ metrics?.messages_total || 0 }}</h2>
+        <p class="kpi-change">
+          По всем каналам связи
+        </p>
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Статусы и SLA -->
+  <section class="status-section">
+    <mat-card class="status-card">
+      <div class="card-header">
+        <div>
+          <h3>Статусы обращений</h3>
+          <p class="card-subtitle">Распределение по текущему состоянию</p>
+        </div>
+      </div>
+      <div class="status-grid" *ngIf="statusData.length">
+        <div class="status-item" *ngFor="let status of statusData">
+          <div class="status-indicator" [style.background-color]="getStatusColor(status.name)"></div>
+          <div class="status-info">
+            <p class="status-label">{{ status.name }}</p>
+            <h3 class="status-value">{{ status.value }}</h3>
+            <p class="status-percent">{{ getStatusPercentage(status.value) }}%</p>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="statusData.length" class="status-chart">
+        <ngx-charts-pie-grid
+          [scheme]="statusColorScheme"
+          [results]="statusData"
+          [legend]="false"
+          [animations]="true">
+        </ngx-charts-pie-grid>
+      </div>
+    </mat-card>
+
+    <mat-card class="sla-card">
+      <div class="card-header">
+        <div>
+          <h3>Соответствие SLA</h3>
+          <p class="card-subtitle">Производительность по метрикам качества</p>
+        </div>
+      </div>
+      <div class="sla-metrics" *ngIf="metrics">
+        <div class="sla-item">
+          <div class="sla-icon sla-icon-success">
+            <mat-icon>verified</mat-icon>
+          </div>
+          <div class="sla-content">
+            <p class="sla-label">Обращений в работе</p>
+            <h3>{{ metrics.open_count || 0 }}</h3>
+            <div class="sla-progress">
+              <div class="sla-progress-bar" [style.width.%]="getOpenPercentage()"></div>
+            </div>
+          </div>
+        </div>
+        <div class="sla-item">
+          <div class="sla-icon sla-icon-warning">
+            <mat-icon>pending</mat-icon>
+          </div>
+          <div class="sla-content">
+            <p class="sla-label">Новых без подтверждения</p>
+            <h3>{{ metrics.new_count || 0 }}</h3>
+            <div class="sla-progress">
+              <div class="sla-progress-bar warning" [style.width.%]="getNewPercentage()"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Основные графики -->
+  <section class="charts-section">
+    <mat-card class="chart-card-large">
+      <div class="card-header">
+        <div>
+          <h3>Распределение по типам транспорта</h3>
+          <p class="card-subtitle">Анализ обращений по видам транспорта</p>
+        </div>
+      </div>
+      <div class="chart-container" *ngIf="modeData.length">
+        <ngx-charts-bar-vertical
+          [scheme]="transportColorScheme"
+          [results]="modeData"
+          [xAxis]="true"
+          [yAxis]="true"
+          [legend]="false"
+          [showGridLines]="true"
+          [roundDomains]="true">
+        </ngx-charts-bar-vertical>
+      </div>
+      <div class="empty-state" *ngIf="!modeData.length">
+        <mat-icon>bar_chart</mat-icon>
+        <p>Нет данных о типах транспорта</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="chart-card-large">
+      <div class="card-header">
+        <div>
+          <h3>Категории обращений</h3>
+          <p class="card-subtitle">Распределение по типам обращений</p>
+        </div>
+      </div>
+      <div class="chart-container" *ngIf="categoryData.length">
+        <ngx-charts-pie-chart
+          [scheme]="categoryColorScheme"
+          [results]="categoryData"
+          [legend]="true"
+          [legendPosition]="'right'"
+          [doughnut]="true"
+          [labels]="true"
+          [animations]="true">
+        </ngx-charts-pie-chart>
+      </div>
+      <div class="empty-state" *ngIf="!categoryData.length">
+        <mat-icon>pie_chart</mat-icon>
+        <p>Нет данных о категориях</p>
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Тональность и каналы -->
+  <section class="insights-section">
+    <mat-card class="insight-card">
+      <div class="card-header">
+        <div>
+          <h3>Тональность обращений</h3>
+          <p class="card-subtitle">Анализ настроения клиентов</p>
+        </div>
+      </div>
+      <div class="sentiment-grid" *ngIf="sentimentData.length">
+        <div class="sentiment-item" *ngFor="let sentiment of sentimentData" [class]="'sentiment-' + sentiment.name.toLowerCase()">
+          <div class="sentiment-icon">
+            <mat-icon>{{ getSentimentIcon(sentiment.name) }}</mat-icon>
+          </div>
+          <div class="sentiment-info">
+            <p class="sentiment-label">{{ sentiment.name }}</p>
+            <h3>{{ sentiment.value }}</h3>
+            <p class="sentiment-percent">{{ getSentimentPercentage(sentiment.value) }}%</p>
+          </div>
+        </div>
+      </div>
+      <div class="chart-container-small" *ngIf="sentimentData.length">
+        <ngx-charts-pie-grid
+          [scheme]="sentimentColorScheme"
+          [results]="sentimentData"
+          [legend]="false"
+          [animations]="true">
+        </ngx-charts-pie-grid>
+      </div>
+    </mat-card>
+
+    <mat-card class="insight-card">
+      <div class="card-header">
+        <div>
+          <h3>Каналы поступления</h3>
+          <p class="card-subtitle">Откуда приходят обращения</p>
+        </div>
+      </div>
+      <div class="channel-list" *ngIf="channelData.length">
+        <div class="channel-item" *ngFor="let channel of channelData">
+          <div class="channel-icon">
+            <mat-icon>{{ getChannelIcon(channel.name) }}</mat-icon>
+          </div>
+          <div class="channel-info">
+            <p class="channel-name">{{ channel.name }}</p>
+            <div class="channel-bar">
+              <div class="channel-bar-fill" [style.width.%]="getChannelPercentage(channel.value)" [style.background-color]="getChannelColor(channel.name)"></div>
+            </div>
+          </div>
+          <div class="channel-value">
+            <strong>{{ channel.value }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="!channelData.length">
+        <mat-icon>inbox</mat-icon>
+        <p>Нет данных о каналах</p>
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Детальная аналитика -->
+  <section class="detailed-section">
+    <mat-card class="detailed-card">
+      <div class="card-header">
+        <div>
+          <h3>Топ тематик обращений</h3>
+          <p class="card-subtitle">Наиболее частые темы обращений</p>
+        </div>
+      </div>
+      <div class="topic-list" *ngIf="topicData.length">
+        <div class="topic-item" *ngFor="let topic of topicData | slice:0:10; let i = index">
+          <div class="topic-rank">{{ i + 1 }}</div>
+          <div class="topic-info">
+            <p class="topic-name">{{ topic.name }}</p>
+            <div class="topic-bar">
+              <div class="topic-bar-fill" [style.width.%]="getTopicPercentage(topic.value)"></div>
+            </div>
+          </div>
+          <div class="topic-value">{{ topic.value }}</div>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="!topicData.length">
+        <mat-icon>list</mat-icon>
+        <p>Нет данных о тематиках</p>
+      </div>
+    </mat-card>
+  </section>
+</div>
