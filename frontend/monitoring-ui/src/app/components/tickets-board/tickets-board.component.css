@@ -11,17 +11,19 @@
 }
 
 .tickets tr:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(30, 41, 59, 0.4);
+  transition: background-color 0.2s ease;
 }
 
 .is-transport {
-  background-color: #e3f2fd;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid var(--blue-500);
 }
 
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-muted);
 }
 
 .empty-state mat-icon {
@@ -29,7 +31,8 @@
   width: 64px;
   height: 64px;
   margin-bottom: 1rem;
-  opacity: 0.5;
+  color: var(--accent-orange);
+  opacity: 0.7;
 }
 
 .empty-state h3 {

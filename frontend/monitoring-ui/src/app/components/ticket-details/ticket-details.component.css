@@ -44,12 +44,18 @@ mat-card {
 .message {
   padding: 1rem;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid #0ea5e9;
+  background: rgba(30, 41, 59, 0.4);
+  border-left: 3px solid var(--blue-500);
+  transition: all 0.2s ease;
+}
+
+.message:hover {
+  background: rgba(30, 41, 59, 0.6);
+  transform: translateX(4px);
 }
 
 .message.outbound {
-  border-left-color: #f97066;
+  border-left-color: var(--accent-orange);
 }
 
 .author {
@@ -81,7 +87,7 @@ mat-card {
 }
 
 .error {
-  color: #f97066;
+  color: #EF4444;
   margin-top: 0.5rem;
 }
 

@@ -12,7 +12,7 @@
       </div>
     </div>
     <ngx-charts-bar-vertical
-      [scheme]="{ domain: ['#7f5af0', '#f97316', '#22d3ee', '#ef4444'] }"
+      [scheme]="{ domain: ['#2563EB', '#F97316', '#06B6D4', '#EF4444'] }"
       [results]="topicData"
       [xAxis]="true"
       [yAxis]="true"
@@ -25,7 +25,7 @@
   <div class="chart-card" *ngIf="categoryData.length">
     <h3>Типы обращений</h3>
     <ngx-charts-bar-vertical
-      [scheme]="{ domain: ['#38bdf8', '#fcd34d', '#f472b6', '#c084fc'] }"
+      [scheme]="{ domain: ['#3B82F6', '#F97316', '#10B981', '#8B5CF6'] }"
       [results]="categoryData"
       [xAxis]="true"
       [yAxis]="true"
@@ -38,7 +38,7 @@
   <div class="chart-card" *ngIf="sentimentData.length">
     <h3>Тональность</h3>
     <ngx-charts-pie-grid
-      [scheme]="{ domain: ['#f97066', '#94a3b8', '#22d3ee'] }"
+      [scheme]="{ domain: ['#EF4444', '#94A3B8', '#06B6D4'] }"
       [results]="sentimentData"
       [legend]="false"
       [animations]="true"
@@ -49,7 +49,7 @@
   <div class="chart-card" *ngIf="modeData.length">
     <h3>Тип транспорта</h3>
     <ngx-charts-pie-grid
-      [scheme]="{ domain: ['#7c3aed', '#f472b6', '#38b2ac', '#60a5fa', '#fbbf24'] }"
+      [scheme]="{ domain: ['#2563EB', '#F97316', '#10B981', '#3B82F6', '#FB923C'] }"
       [results]="modeData"
       [legend]="false"
       [animations]="true"
@@ -60,7 +60,7 @@
   <div class="chart-card" *ngIf="statusData.length">
     <h3>Статусы</h3>
     <ngx-charts-pie-chart
-      [scheme]="{ domain: ['#f97316', '#facc15', '#38bdf8', '#22d3ee', '#94a3b8'] }"
+      [scheme]="{ domain: ['#F97316', '#FBBF24', '#3B82F6', '#06B6D4', '#94A3B8'] }"
       [results]="statusData"
       [legend]="true"
       [doughnut]="true"
@@ -72,7 +72,7 @@
   <div class="chart-card" *ngIf="channelData.length">
     <h3>Каналы поступления</h3>
     <ngx-charts-bar-vertical
-      [scheme]="{ domain: ['#c026d3', '#db2777', '#0ea5e9', '#22d3ee'] }"
+      [scheme]="{ domain: ['#8B5CF6', '#F97316', '#2563EB', '#06B6D4'] }"
       [results]="channelData"
       [xAxis]="false"
       [yAxis]="true"

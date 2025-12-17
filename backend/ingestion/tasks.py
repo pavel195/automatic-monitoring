@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
+import requests
 from celery import shared_task
 
 from ingestion.connectors.telegram_client import TelegramConnector
@@ -39,9 +40,23 @@ def poll_telegram():
             logger.info(f"Получено событий от Telegram API: {len(events)}")
             processed = 0
             for event in events:
+                external_id = event.get("external_id")
+                logger.debug(f"Обработка события: external_id={external_id}, author={event.get('author')}, payload={event.get('payload', '')[:50]}")
+                
+                # Проверяем, существует ли уже
+                exists = ChannelMessage.objects.filter(
+                    external_id=external_id,
+                    channel=event.get("channel", ChannelMessage.Channel.TELEGRAM)
+                ).exists()
+                
+                if exists:
+                    logger.debug(f"Сообщение {external_id} уже существует в БД, пропускаем")
+                    continue
+                
                 received_at = event.get("received_at") or datetime.now(timezone.utc)
+                try:
                 msg, created = ChannelMessage.objects.get_or_create(
-                    external_id=event["external_id"],
+                        external_id=external_id,
                     channel=event.get("channel", ChannelMessage.Channel.TELEGRAM),
                     defaults={
                         "author": event.get("author", ""),
@@ -59,9 +74,14 @@ def poll_telegram():
                     },
                 )
                 if created:
+                        logger.info(f"Создано новое сообщение: ID={msg.id}, external_id={external_id}, payload={msg.payload[:50]}")
                     classify_message.delay(str(msg.id))
-                    connector.acknowledge(event["external_id"])
+                        connector.acknowledge(external_id)
                     processed += 1
+                    else:
+                        logger.debug(f"Сообщение {external_id} уже существует (race condition)")
+                except Exception as e:
+                    logger.error(f"Ошибка при сохранении сообщения {external_id}: {e}", exc_info=True)
             if processed:
                 logger.info(
                     "Обработано %s сообщений для бота компании %s",
@@ -69,16 +89,32 @@ def poll_telegram():
                     bot.company.name,
                 )
                 total_processed += processed
+        except requests.exceptions.HTTPError as exc:
+            # Ошибка 409 Conflict - это нормально, не меняем статус
+            if exc.response and exc.response.status_code == 409:
+                logger.debug(
+                    "Telegram API 409 Conflict для бота %s (параллельные запросы) - это нормально",
+                    bot.bot_username
+                )
+            else:
+                # Другие HTTP ошибки - логируем, но не меняем статус на ERROR сразу
+                logger.warning(
+                    "HTTP ошибка при обработке бота %s компании %s: %s",
+                    bot.bot_username,
+                    bot.company.name if bot.company else "Unknown",
+                    exc,
+                )
         except Exception as exc:
+            # Критические ошибки - меняем статус на ERROR
             logger.error(
-                "Ошибка при обработке бота %s компании %s: %s",
+                "Критическая ошибка при обработке бота %s компании %s: %s",
                 bot.bot_username,
                 bot.company.name if bot.company else "Unknown",
                 exc,
             )
-            # Обновляем статус бота при ошибке
+            # Обновляем статус бота при критической ошибке
             bot.status = TelegramBot.Status.ERROR
-            bot.last_error = str(exc)
+            bot.last_error = str(exc)[:500]  # Ограничиваем длину ошибки
             bot.save(update_fields=["status", "last_error"])
 
     if total_processed:

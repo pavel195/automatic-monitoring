@@ -1,10 +1,63 @@
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+/* ============================================
+   ПРОФЕССИОНАЛЬНАЯ ЦВЕТОВАЯ СХЕМА
+   Тематика: Темно-синий с оранжевыми акцентами
+   ============================================ */
+
 :root {
-  --gradient: radial-gradient(circle at top, #101828, #0f141c 60%);
-  --card-bg: rgba(255, 255, 255, 0.08);
-  --text-primary: #e4e7ec;
-  --text-muted: #98a2b3;
+  /* Темно-синие оттенки (основная палитра) */
+  --dark-blue-900: #0F172A;  /* Самый темный - фон */
+  --dark-blue-800: #1E293B;  /* Темный - карточки, элементы */
+  --dark-blue-700: #334155;  /* Средний - границы, разделители */
+  --dark-blue-600: #475569;  /* Светлее - hover состояния */
+  
+  /* Синие акценты */
+  --blue-800: #1E40AF;       /* Темно-синий акцент */
+  --blue-600: #2563EB;       /* Основной синий */
+  --blue-500: #3B82F6;       /* Светлый синий */
+  --blue-400: #60A5FA;       /* Очень светлый синий */
+  
+  /* Оранжевые акценты (иконки, кнопки, выделения) */
+  --orange-600: #EA580C;     /* Темный оранжевый */
+  --orange-500: #F97316;     /* Основной оранжевый */
+  --orange-400: #FB923C;     /* Светлый оранжевый */
+  --orange-300: #FDBA74;     /* Очень светлый оранжевый */
+  
+  /* Градиенты */
+  --gradient: radial-gradient(circle at top, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+  --gradient-hero: linear-gradient(135deg, #1E293B 0%, #0F172A 50%, #1E40AF 100%);
+  --gradient-card: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  
+  /* Фон и карточки */
+  --card-bg: rgba(30, 41, 59, 0.6);
+  --card-bg-hover: rgba(30, 41, 59, 0.8);
+  --card-border: rgba(71, 85, 105, 0.3);
+  
+  /* Фон таблиц - более светлый для контраста */
+  --table-bg: rgba(51, 65, 85, 0.5);  /* dark-blue-700 с прозрачностью */
+  --table-header-bg: rgba(51, 65, 85, 0.7);  /* Более темный для заголовков */
+  --table-row-hover: rgba(71, 85, 105, 0.4);  /* dark-blue-600 для hover */
+  
+  /* Текст */
+  --text-primary: #F1F5F9;   /* Почти белый для основного текста */
+  --text-secondary: #CBD5E1; /* Светло-серый для вторичного текста */
+  --text-muted: #94A3B8;     /* Серый для приглушенного текста */
+  --text-disabled: #64748B;  /* Серый для неактивных элементов */
+  
+  /* Акценты и состояния */
+  --accent-orange: var(--orange-500);
+  --accent-blue: var(--blue-600);
+  --success: #10B981;       /* Зеленый для успеха */
+  --warning: var(--orange-500); /* Оранжевый для предупреждений */
+  --error: #EF4444;          /* Красный для ошибок */
+  --info: var(--blue-500);   /* Синий для информации */
+  
+  /* Тени */
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.3);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.4);
+  --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.5);
+  --shadow-orange: 0 4px 16px rgba(249, 115, 22, 0.3);
 }
 
 html,
@@ -17,6 +70,7 @@ body {
   font-family: 'Inter', 'Helvetica Neue', sans-serif;
   background: var(--gradient);
   color: var(--text-primary);
+  overflow-x: hidden;
 }
 
 body,
@@ -32,39 +86,264 @@ label {
   color: var(--text-primary);
 }
 
+/* Карточки с темно-синим фоном и эффектом стекла */
 mat-card,
 .mat-mdc-card {
   background: var(--card-bg) !important;
   color: var(--text-primary) !important;
   border-radius: 18px !important;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25) !important;
+  box-shadow: var(--shadow-md) !important;
   backdrop-filter: blur(18px);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s ease;
+}
+
+mat-card:hover,
+.mat-mdc-card:hover {
+  background: var(--card-bg-hover) !important;
+  box-shadow: var(--shadow-lg) !important;
+  transform: translateY(-2px);
 }
 
 .mat-mdc-card * {
   color: inherit;
 }
 
+/* Заголовки карточек - видимый текст */
+mat-card-title,
+.mat-mdc-card-title {
+  color: var(--text-primary) !important;
+}
+
+mat-card-subtitle,
+.mat-mdc-card-subtitle {
+  color: var(--text-muted) !important;
+}
+
+mat-card-header,
+.mat-mdc-card-header {
+  color: var(--text-primary) !important;
+}
+
+/* Таблицы Material в темной теме - контрастные */
+mat-table,
+.mat-mdc-table {
+  background: var(--table-bg) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--card-border) !important;
+}
+
+mat-header-cell,
+.mat-mdc-header-cell {
+  color: var(--text-primary) !important;
+  border-bottom-color: rgba(71, 85, 105, 0.4) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+mat-cell,
+.mat-mdc-cell {
+  color: var(--text-primary) !important;
+  border-bottom-color: rgba(71, 85, 105, 0.3) !important;
+}
+
+mat-header-row,
+.mat-mdc-header-row {
+  background-color: var(--table-header-bg) !important;
+  border-bottom: 2px solid rgba(71, 85, 105, 0.4) !important;
+  height: 48px !important;
+}
+
+mat-row,
+.mat-mdc-row {
+  background-color: transparent !important;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.25) !important;
+  transition: background-color 0.2s ease !important;
+}
+
+mat-row:hover,
+.mat-mdc-row:hover {
+  background-color: var(--table-row-hover) !important;
+}
+
+mat-row:last-child,
+.mat-mdc-row:last-child {
+  border-bottom: none !important;
+}
+
+/* Кнопки с оранжевыми акцентами */
 .mat-mdc-button .mdc-button__label,
 .mat-mdc-raised-button .mdc-button__label,
 .mat-mdc-stroked-button .mdc-button__label,
 .mat-mdc-icon-button .mdc-icon-button__label,
 .mat-mdc-button:not(.mat-mdc-button-disabled) {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-primary);
 }
 
 .mat-mdc-button .mdc-button__ripple::before,
 .mat-mdc-button .mdc-button__ripple::after {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(249, 115, 22, 0.2);
 }
 
+/* Оранжевая иконка логотипа */
+.logo mat-icon {
+  color: var(--accent-orange) !important;
+  filter: drop-shadow(0 2px 4px rgba(249, 115, 22, 0.4));
+}
+
+/* Иконки по умолчанию */
 .mat-icon {
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
+/* Акцентные иконки (оранжевые) */
+.mat-icon[color="accent"],
+.mat-icon.orange-icon {
+  color: var(--accent-orange) !important;
+}
+
+/* Ссылки и кнопки */
 a,
 .mat-button,
 .mat-mdc-button {
   color: var(--text-primary);
+  transition: color 0.2s ease;
+}
+
+a:hover,
+.mat-button:hover,
+.mat-mdc-button:hover {
+  color: var(--accent-orange);
+}
+
+/* Material Theme переопределения для темно-синего и оранжевого */
+.mat-mdc-button.mat-primary,
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--blue-600) !important;
+  color: white !important;
+}
+
+.mat-mdc-button.mat-accent,
+.mat-mdc-raised-button.mat-accent {
+  background-color: var(--accent-orange) !important;
+  color: white !important;
+  box-shadow: var(--shadow-orange);
+}
+
+.mat-mdc-button.mat-accent:hover,
+.mat-mdc-raised-button.mat-accent:hover {
+  background-color: var(--orange-600) !important;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+}
+
+/* Toolbar с темно-синим фоном */
+mat-toolbar.mat-primary {
+  background: linear-gradient(135deg, var(--dark-blue-800) 0%, var(--dark-blue-900) 100%) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-md);
+  border-bottom: 1px solid var(--card-border);
+}
+
+/* Активная ссылка с оранжевым акцентом */
+.active-link {
+  background-color: rgba(249, 115, 22, 0.15) !important;
+  border-left: 3px solid var(--accent-orange);
+}
+
+/* Material Menu - темно-синий стиль с видимым текстом */
+.mat-mdc-menu-panel {
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--card-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-radius: 12px !important;
+  min-width: 180px !important;
+}
+
+.mat-mdc-menu-content {
+  background: transparent !important;
+  padding: 8px 0 !important;
+}
+
+.mat-mdc-menu-item {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 12px 16px !important;
+}
+
+.mat-mdc-menu-item .mdc-list-item__primary-text,
+.mat-mdc-menu-item span {
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  margin-left: 0 !important;
+}
+
+.mat-mdc-menu-item .mat-icon {
+  color: var(--text-secondary) !important;
+  margin-right: 16px !important;
+}
+
+.mat-mdc-menu-item:hover {
+  background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.mat-mdc-menu-item:hover .mat-icon {
+  color: var(--accent-orange) !important;
+}
+
+.mat-mdc-menu-item:hover span {
+  color: var(--text-primary) !important;
+}
+
+/* Оранжевая иконка Telegram в меню */
+.telegram-menu-item {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.telegram-menu-item .telegram-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 16px;
+  margin-left: 0;
+  color: var(--accent-orange) !important;
+  fill: var(--accent-orange) !important;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.telegram-menu-item:hover .telegram-icon {
+  color: var(--orange-400) !important;
+  fill: var(--orange-400) !important;
+}
+
+.telegram-menu-item span {
+  flex: 1;
+  color: var(--text-primary) !important;
+}
+
+/* User Menu тоже нужно исправить */
+.user-menu-header {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.user-menu-header .user-name {
+  color: var(--text-primary) !important;
+}
+
+.user-menu-header .user-email {
+  color: var(--text-muted) !important;
+}
+
+.user-menu-header .user-role {
+  color: var(--text-muted) !important;
 }
 

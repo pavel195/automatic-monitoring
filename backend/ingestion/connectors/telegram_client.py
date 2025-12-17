@@ -75,8 +75,25 @@ class TelegramConnector(BaseConnector):
             return []
 
         params = {"timeout": 5, "offset": self._offset}
+        try:
         response = requests.get(f"{self.api_url}/getUpdates", params=params, timeout=10)
         response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            # Обработка ошибки 409 Conflict (параллельные запросы) - это нормально, просто пропускаем
+            if e.response.status_code == 409:
+                logger.debug("Telegram API: 409 Conflict (параллельные запросы), пропускаем этот цикл. Offset: %s", self._offset)
+                return []
+            # Для других HTTP ошибок логируем и пробрасываем
+            logger.error("Telegram API HTTP ошибка %s: %s", e.response.status_code, e.response.text[:200])
+            raise
+        except requests.exceptions.RequestException as e:
+            # Сетевые ошибки - логируем, но не падаем
+            logger.warning("Ошибка сети при запросе к Telegram API: %s", e)
+            return []
+        except Exception as e:
+            logger.error("Неожиданная ошибка при запросе к Telegram API: %s", e)
+            raise
+        
         payload = response.json()
         if not payload.get("ok"):
             logger.error("Ошибка чтения Telegram: %s", payload)
