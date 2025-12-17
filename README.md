@@ -25,7 +25,10 @@ make down        # остановить окружение
 - `docker-compose.yml` — Сервисы: backend, Celery worker/beat, PostgreSQL, Redis, Elasticsearch, frontend.
 
 ## Поток обработки
-1. `ingestion.tasks.poll_telegram` опрашивает Telegram (credentials берутся из `.env`), сохраняет сообщения в БД и ставит Celery-задачу классификации. Offset хранится в Redis, поэтому дубликатов нет.
+1. `ingestion.tasks.poll_telegram` опрашивает Telegram (credentials берутся из `.env`), сохраняет сообщения в БД и ставит Celery-задачу классификации. Offset хранится в Redis, поэтому дубликатов нет. Поддерживаются:
+   - прямые сообщения/посты каналов (`TELEGRAM_MONITOR_CHAT_ID`);
+   - комментарии в обсуждениях (`TELEGRAM_DISCUSSION_CHAT_IDS`);
+   - личные обращения в бот (включаются через `TELEGRAM_ALLOW_DIRECT=1`, бот отправляет пользователю клавиатуру с быстрым выбором типа обращения).
 2. `routing.KeywordClassifier` назначает тип/приоритет/группу, создаёт `Ticket`, индексирует его в Elasticsearch.
 3. `routing.sla_watchdog` отслеживает дедлайны SLA и пишет предупреждения в логи/метрики.
 4. `tickets.services.TicketResponseService` публикует ответы операторов обратно в Telegram (reply на исходный комментарий), статус сохраняется в `TicketResponse`.

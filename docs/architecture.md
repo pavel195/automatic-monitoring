@@ -7,7 +7,7 @@ Telegram -> Celery beat (poll_telegram) -> Django API -> Ticket -> Celery NLP ->
                                                 -> Prometheus/логи SLA
 ```
 
-- **Каналы**: на MVP подключён Telegram (polling), предусмотрен `BaseConnector` для расширения.
+- **Каналы**: на MVP подключён Telegram (polling), предусмотрен `BaseConnector` для расширения. Для каналов можно параллельно подключать обсуждения (комментарии) через `TELEGRAM_DISCUSSION_CHAT_IDS`, а также личные обращения в бота (`TELEGRAM_ALLOW_DIRECT=1`) с быстрыми кнопками для выбора типа обращения.
 - **Очереди**: Redis используется Celery как брокер и backend результатов.
 - **Backend**: Django + DRF реализуют CRUD тикетов, аналитические и поисковые API, Celery обслуживает классификацию и SLA.
 - **Хранилища**: PostgreSQL — транзакционный контур, Elasticsearch — быстрый поиск по обращениям, Redis — брокер Celery.
@@ -24,7 +24,7 @@ Telegram -> Celery beat (poll_telegram) -> Django API -> Ticket -> Celery NLP ->
 | `tickets.services` | Сервис `TicketResponseService`, каналы отправки (`OutboundChannel`, `TelegramChannel`). |
 
 ### 3. Взаимодействие компонентов
-1. `ingestion.tasks.poll_telegram` запрашивает Telegram Bot API, сохраняет `ChannelMessage`, планирует Celery `classify_message`.
+1. `ingestion.tasks.poll_telegram` запрашивает Telegram Bot API, сохраняет `ChannelMessage`, планирует Celery `classify_message`. Помимо основной ленты каналов обрабатываются комментарии из связанных обсуждений (`TELEGRAM_DISCUSSION_CHAT_IDS`) и личные обращения пользователей к боту (при `TELEGRAM_ALLOW_DIRECT=1` бот отправляет приветствие и клавиатуру).
 2. `routing.tasks.classify_message` определяет категорию/приоритет/группу, создаёт `Ticket`, индексирует его в Elasticsearch.
 3. `routing.tasks.sla_watchdog` отслеживает дедлайны и пишет предупреждения в логи (можно собирать Prometheus).
 4. `tickets.services.TicketResponseService` формирует ответы и публикует их в Telegram как reply на исходный комментарий.

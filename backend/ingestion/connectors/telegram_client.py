@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, Optional
 
 import requests
 import redis
@@ -17,9 +17,33 @@ class TelegramConnector(BaseConnector):
     Для production лучше перейти на webhook, но для MVP достаточно поллинга.
     """
 
+    QUICK_ACTIONS = {
+        "Жалоба": ("complaint", "Опишите, что произошло и где вы столкнулись с проблемой."),
+        "Инцидент": (
+            "incident",
+            "Расскажите, какой инцидент произошёл. Укажите место, время и детали.",
+        ),
+        "Запрос информации": (
+            "request",
+            "Что именно хотите узнать? Напишите свой вопрос, мы передадим его специалистам.",
+        ),
+        "Благодарность": (
+            "praise",
+            "Пожалуйста, напишите сообщение, мы передадим благодарность сотрудникам.",
+        ),
+    }
+    QUICK_REPLY_BUTTONS = [
+        ["Жалоба", "Инцидент"],
+        ["Запрос информации", "Благодарность"],
+    ]
+
     def __init__(self):
         self.token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-        self.chat_id = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
+        monitor_ids = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
+        discussion_ids = os.getenv("TELEGRAM_DISCUSSION_CHAT_IDS", "")
+        self.allow_private = os.getenv("TELEGRAM_ALLOW_DIRECT", "0") in ("1", "true")
+        self.chat_ids = self._parse_chat_ids(monitor_ids)
+        self.discussion_chat_ids = self._parse_chat_ids(discussion_ids)
         self.api_url = f"https://api.telegram.org/bot{self.token}"
         self.offset_key = "ingestion:telegram_offset"
         self._offset = 0
@@ -43,21 +67,67 @@ class TelegramConnector(BaseConnector):
         events = []
         for update in payload.get("result", []):
             self._offset = max(self._offset, update["update_id"] + 1)
-            message = update.get("message") or update.get("channel_post")
+            message = (
+                update.get("message")
+                or update.get("channel_post")
+                or update.get("edited_message")
+            )
             if not message:
                 continue
-            if self.chat_id and str(message["chat"]["id"]) != str(self.chat_id):
+
+            chat = message.get("chat", {})
+            chat_id = str(chat.get("id"))
+            chat_type = chat.get("type")
+            is_private = chat_type == "private"
+
+            if not self._should_accept_chat(chat_id, is_private):
                 continue
+
+            text = (message.get("text") or message.get("caption") or "").strip()
+            if is_private:
+                if text.lower() in ("/start", "start"):
+                    self._send_welcome_keyboard(chat_id)
+                    continue
+                if text in self.QUICK_ACTIONS:
+                    self._remember_last_action(chat_id, text)
+                    self._send_followup(chat_id, text)
+                    continue
+
+            is_comment = chat_id in self.discussion_chat_ids
+            reply = message.get("reply_to_message")
+            parent_external_id = ""
+            thread_url = ""
+            origin_username = self._extract_origin_username(message, reply)
+            if is_comment and reply:
+                parent_external_id = str(reply.get("message_id", ""))
+                if origin_username and parent_external_id:
+                    thread_url = f"https://t.me/{origin_username}/{parent_external_id}"
+
+            author = self._extract_author(message)
+            metadata = {
+                "chat_id": chat.get("id"),
+                "chat_type": chat_type,
+                "discussion_chat": is_comment,
+                "parent_external_id": parent_external_id,
+                "origin_username": origin_username,
+                "raw": message,
+            }
+            if is_private:
+                last_action = self._pop_last_action(chat_id)
+                if last_action:
+                    metadata["suggested_category"] = self.QUICK_ACTIONS[last_action][0]
+
             events.append(
                 {
-                    "external_id": str(message["message_id"]),
+                    "external_id": str(message.get("message_id")),
                     "channel": "telegram",
-                    "author": message.get("from", {}).get("username", "unknown"),
-                    "payload": message.get("text", ""),
-                    "metadata": {
-                        "chat_id": message["chat"]["id"],
-                        "raw": message,
-                    },
+                    "author": author,
+                    "payload": text,
+                    "is_comment": is_comment,
+                    "parent_external_id": parent_external_id,
+                    "thread_url": thread_url,
+                    "source_chat_id": chat_id,
+                    "metadata": metadata,
                 }
             )
         if events:
@@ -66,6 +136,17 @@ class TelegramConnector(BaseConnector):
 
     def acknowledge(self, message_id: str) -> None:
         logger.debug("Telegram message %s отмечен как обработанный", message_id)
+
+    def send_quick_reply(self, chat_id: str, text: str) -> Optional[str]:
+        return self._post_message(
+            chat_id,
+            text,
+            reply_markup={
+                "keyboard": self.QUICK_REPLY_BUTTONS,
+                "resize_keyboard": True,
+                "one_time_keyboard": False,
+            },
+        )
 
     # --- внутренние служебные методы ---
     def _init_state_store(self):
@@ -95,4 +176,100 @@ class TelegramConnector(BaseConnector):
             self.redis.set(self.offset_key, self._offset)
         except Exception as exc:  # pragma: no cover
             logger.warning("Не удалось сохранить offset Telegram: %s", exc)
+
+    def _should_accept_chat(self, chat_id: str, is_private: bool) -> bool:
+        if is_private:
+            return self.allow_private
+        if self.chat_ids and chat_id in self.chat_ids:
+            return True
+        if self.discussion_chat_ids and chat_id in self.discussion_chat_ids:
+            return True
+        return not self.chat_ids and not self.discussion_chat_ids
+
+    def _send_welcome_keyboard(self, chat_id: str):
+        text = (
+            "👋 Привет! Вы можете отправить обращение в транспортную компанию. "
+            "Выберите тип обращения на клавиатуре или просто опишите проблему."
+        )
+        self.send_quick_reply(chat_id, text)
+
+    def _send_followup(self, chat_id: str, action: str):
+        _, prompt = self.QUICK_ACTIONS.get(
+            action, ("request", "Введите детали обращения.")
+        )
+        self._post_message(chat_id, f"✅ {action}. {prompt}")
+
+    def _post_message(self, chat_id: str, text: str, reply_markup=None) -> Optional[str]:
+        if not self.token:
+            return None
+        payload = {
+            "chat_id": chat_id,
+            "text": text,
+            "disable_web_page_preview": True,
+        }
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+        response = requests.post(
+            f"{self.api_url}/sendMessage",
+            json=payload,
+            timeout=10,
+        )
+        response.raise_for_status()
+        data = response.json()
+        if not data.get("ok"):
+            logger.warning("Не удалось отправить сообщение клавиатуры: %s", data)
+            return None
+        return str(data["result"]["message_id"])
+
+    @staticmethod
+    def _parse_chat_ids(raw: str) -> set[str]:
+        ids = set()
+        for value in raw.split(","):
+            value = value.strip()
+            if value:
+                ids.add(value)
+        return ids
+
+    @staticmethod
+    def _extract_author(message: Mapping) -> str:
+        author = message.get("from") or {}
+        return author.get("username") or author.get("first_name") or "unknown"
+
+    @staticmethod
+    def _extract_origin_username(message: Mapping, reply: Optional[Mapping]) -> str:
+        sender_chat = (message.get("sender_chat") or {}).get("username")
+        if sender_chat:
+            return sender_chat
+        if reply:
+            return (
+                (reply.get("sender_chat") or {}).get("username")
+                or (reply.get("forward_from_chat") or {}).get("username")
+                or (reply.get("chat") or {}).get("username")
+                or ""
+            )
+        return ""
+
+    def _remember_last_action(self, chat_id: str, action: str):
+        if not self.redis:
+            return
+        try:
+            self.redis.setex(self._private_action_key(chat_id), 600, action)
+        except Exception as exc:  # pragma: no cover
+            logger.warning("Не удалось сохранить выбранный тип обращения: %s", exc)
+
+    def _pop_last_action(self, chat_id: str) -> Optional[str]:
+        if not self.redis:
+            return None
+        key = self._private_action_key(chat_id)
+        try:
+            value = self.redis.get(key)
+            if value:
+                self.redis.delete(key)
+            return value
+        except Exception:  # pragma: no cover
+            return None
+
+    @staticmethod
+    def _private_action_key(chat_id: str) -> str:
+        return f"ingestion:telegram:last_action:{chat_id}"
 

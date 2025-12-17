@@ -36,11 +36,15 @@ class ChannelMessage(models.Model):
     metadata = models.JSONField(default=dict, blank=True)
     received_at = models.DateTimeField()
     is_transport = models.BooleanField(default=True)
+    is_comment = models.BooleanField(default=False)
     transport_mode = models.CharField(
         max_length=16,
         choices=TransportMode.choices,
         default=TransportMode.OTHER,
     )
+    source_chat_id = models.CharField(max_length=64, blank=True)
+    parent_external_id = models.CharField(max_length=255, blank=True)
+    thread_url = models.URLField(blank=True)
     sentiment = models.CharField(
         max_length=16, choices=Sentiment.choices, default=Sentiment.NEUTRAL
     )

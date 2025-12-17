@@ -8,14 +8,21 @@ class ChannelMessageAdmin(admin.ModelAdmin):
     list_display = (
         "external_id",
         "channel",
+        "is_comment",
         "transport_mode",
         "is_transport",
         "sentiment",
         "received_at",
         "ticket",
     )
-    list_filter = ("channel", "transport_mode", "is_transport", "sentiment")
-    search_fields = ("external_id", "payload")
+    list_filter = (
+        "channel",
+        "is_comment",
+        "transport_mode",
+        "is_transport",
+        "sentiment",
+    )
+    search_fields = ("external_id", "payload", "parent_external_id")
 
 
 @admin.register(Ticket)
