@@ -47,12 +47,16 @@ export class LoginComponent {
     this.error = '';
 
     this.authService.login(this.username, this.password).subscribe({
-      next: () => {
-        // Перенаправляем на сохраненный URL или на страницу обращений
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/tickets';
-        this.router.navigate([returnUrl]);
+      next: (response) => {
+        console.log('[LoginComponent] Успешный вход, пользователь:', response.user);
+        // Перенаправляем на сохраненный URL или на главную страницу
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+        this.router.navigate([returnUrl]).then(() => {
+          console.log('[LoginComponent] Перенаправление на:', returnUrl);
+        });
       },
       error: (err) => {
+        console.error('[LoginComponent] Ошибка входа:', err);
         this.error = err.error?.error || err.error?.detail || 'Ошибка входа. Проверьте данные.';
         this.loading = false;
       },

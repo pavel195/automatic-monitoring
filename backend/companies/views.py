@@ -120,14 +120,39 @@ class TelegramBotViewSet(viewsets.ModelViewSet):
 
         return TelegramBot.objects.none()
 
+    def create(self, request, *args, **kwargs):
+        """Создание бота с логированием ошибок."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Создание бота. Данные: {request.data}")
+        logger.info(f"Пользователь: {request.user}, компания: {getattr(request.user.profile, 'company', None) if hasattr(request.user, 'profile') else None}")
+        
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            logger.error(f"Ошибки валидации: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            logger.error(f"Ошибка при создании бота: {str(e)}", exc_info=True)
+            return Response(
+                {"error": f"Ошибка при создании бота: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     def perform_create(self, serializer):
         """Создание бота с привязкой к компании пользователя."""
         user = self.request.user
         if hasattr(user, "profile") and user.profile.company:
             serializer.save(company=user.profile.company)
         else:
-            # Если нет компании, используем из запроса
-            serializer.save()
+            # Если нет компании у пользователя, возвращаем ошибку
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"company": "У пользователя нет привязанной компании. Обратитесь к администратору."})
 
 
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):

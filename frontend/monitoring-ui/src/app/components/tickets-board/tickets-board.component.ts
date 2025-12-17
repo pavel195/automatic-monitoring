@@ -73,6 +73,13 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadTickets();
+    
+    // Автообновление тикетов каждые 10 секунд
+    const intervalId = setInterval(() => {
+      this.loadTickets();
+    }, 10000);
+    this.subscription.add({ unsubscribe: () => clearInterval(intervalId) });
+    
     this.subscription.add(
       this.ws.stream().subscribe((event) => {
         if (event) {

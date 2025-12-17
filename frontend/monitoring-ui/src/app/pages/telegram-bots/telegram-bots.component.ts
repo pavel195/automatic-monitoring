@@ -134,6 +134,7 @@ export class TelegramBotsComponent implements OnInit {
       error: (err) => {
         this.loading = false;
         console.error('Ошибка сохранения бота:', err);
+        console.error('Детали ошибки:', JSON.stringify(err.error, null, 2));
 
         if (err.error && typeof err.error === 'object') {
           const errors = err.error;
@@ -155,7 +156,10 @@ export class TelegramBotsComponent implements OnInit {
           } else if (errors.error) {
             this.error = Array.isArray(errors.error) ? errors.error[0] : errors.error;
           } else if (Object.keys(this.fieldErrors).length > 0) {
-            this.error = 'Пожалуйста, исправьте ошибки в форме';
+            // Показываем первую ошибку из полей
+            const firstErrorKey = Object.keys(this.fieldErrors)[0];
+            const firstError = this.fieldErrors[firstErrorKey][0];
+            this.error = `${firstErrorKey}: ${firstError}`;
           } else {
             this.error = 'Ошибка сохранения бота. Попробуйте еще раз.';
           }

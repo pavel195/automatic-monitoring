@@ -121,6 +121,7 @@ class TelegramBotSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "company",  # Компания устанавливается автоматически из профиля пользователя
             "bot_username",
             "status",
             "last_error",
@@ -131,21 +132,42 @@ class TelegramBotSerializer(serializers.ModelSerializer):
     def validate_bot_token(self, value):
         """Валидация токена бота через Telegram API."""
         import requests
+        import logging
+
+        logger = logging.getLogger(__name__)
+        
+        if not value or not value.strip():
+            raise serializers.ValidationError("Токен бота не может быть пустым.")
 
         try:
+            logger.info(f"Проверка токена бота через Telegram API...")
             response = requests.get(
-                f"https://api.telegram.org/bot{value}/getMe", timeout=5
+                f"https://api.telegram.org/bot{value.strip()}/getMe", timeout=10
             )
+            logger.info(f"Ответ от Telegram API: status={response.status_code}")
+            
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f"Данные от Telegram API: {data}")
                 if data.get("ok"):
                     # Сохраняем username бота в контексте
                     if not hasattr(self, '_bot_username'):
                         self._bot_username = data["result"].get("username", "")
-                    return value
-            raise serializers.ValidationError("Неверный токен бота или бот не найден.")
-        except requests.RequestException:
-            raise serializers.ValidationError("Не удалось проверить токен бота. Проверьте подключение к интернету.")
+                    logger.info(f"Токен валиден, username бота: {self._bot_username}")
+                    return value.strip()
+                else:
+                    error_desc = data.get("description", "Неизвестная ошибка")
+                    logger.error(f"Telegram API вернул ошибку: {error_desc}")
+                    raise serializers.ValidationError(f"Неверный токен бота: {error_desc}")
+            else:
+                logger.error(f"Telegram API вернул статус {response.status_code}")
+                raise serializers.ValidationError(f"Не удалось проверить токен бота. Статус: {response.status_code}")
+        except requests.Timeout:
+            logger.error("Таймаут при проверке токена бота")
+            raise serializers.ValidationError("Таймаут при проверке токена бота. Проверьте подключение к интернету.")
+        except requests.RequestException as e:
+            logger.error(f"Ошибка при проверке токена бота: {str(e)}")
+            raise serializers.ValidationError(f"Не удалось проверить токен бота: {str(e)}")
 
     def create(self, validated_data):
         """Создание бота с валидацией."""

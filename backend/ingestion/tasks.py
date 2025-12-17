@@ -19,9 +19,14 @@ def poll_telegram():
     active_bots = TelegramBot.objects.filter(
         status=TelegramBot.Status.ACTIVE, company__status="active"
     )
+    
+    logger.info(f"Найдено активных ботов: {active_bots.count()}")
+    if active_bots.count() == 0:
+        logger.warning("Нет активных ботов для обработки. Проверьте статус ботов и компаний.")
 
     total_processed = 0
     for bot in active_bots:
+        logger.info(f"Обработка бота {bot.bot_username} (компания: {bot.company.name if bot.company else 'нет'})")
         try:
             connector = TelegramConnector(
                 bot_token=bot.bot_token,
@@ -29,7 +34,9 @@ def poll_telegram():
                 discussion_chat_ids=bot.discussion_chat_ids or [],
                 allow_private=bot.allow_direct,
             )
+            logger.info(f"Запрос обновлений для бота {bot.bot_username} (allow_private={bot.allow_direct}, chat_ids={len(bot.chat_ids or [])})")
             events = connector.poll()
+            logger.info(f"Получено событий от Telegram API: {len(events)}")
             processed = 0
             for event in events:
                 received_at = event.get("received_at") or datetime.now(timezone.utc)

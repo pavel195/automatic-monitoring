@@ -40,8 +40,17 @@ export class AppComponent implements OnInit {
     private readonly authService: AuthService,
     private readonly router: Router
   ) {
+    // Проверяем авторизацию по токену и загруженному пользователю
     this.isAuthenticated$ = this.authService.currentUser$.pipe(
-      map(user => !!user)
+      map(user => {
+        // Если пользователь загружен - авторизован
+        if (user) {
+          return true;
+        }
+        // Если пользователь не загружен, но токен есть - считаем авторизованным
+        // (пользователь загрузится асинхронно)
+        return this.authService.isAuthenticated();
+      })
     );
     this.currentUser$ = this.authService.currentUser$;
     this.currentProfile$ = this.authService.currentProfile$;
