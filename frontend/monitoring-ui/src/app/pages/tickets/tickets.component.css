@@ -1,12 +1,244 @@
+.tickets-page {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Панель поиска и фильтров */
+.search-filters-panel {
+  margin-bottom: 2rem;
+}
+
+.search-card {
+  padding: 1.5rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-field {
+  width: 100%;
+}
+
+::ng-deep .search-field .mat-mdc-text-field-wrapper {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::ng-deep .search-field .mat-mdc-form-field-input-control input {
+  color: white !important;
+}
+
+::ng-deep .search-field .mat-mdc-floating-label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+::ng-deep .search-field .mat-mdc-floating-label.mdc-floating-label--float-above {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+::ng-deep .search-field .mdc-notched-outline__leading,
+::ng-deep .search-field .mdc-notched-outline__notch,
+::ng-deep .search-field .mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+::ng-deep .search-field.mat-focused .mdc-notched-outline__leading,
+::ng-deep .search-field.mat-focused .mdc-notched-outline__notch,
+::ng-deep .search-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--accent-orange) !important;
+}
+
+::ng-deep .search-field mat-icon {
+  color: var(--accent-orange);
+}
+
+/* Фильтры */
+.filters-section {
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+  padding-top: 1.5rem;
+}
+
+.filter-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-field {
+  width: 100%;
+}
+
+::ng-deep .filter-field .mat-mdc-text-field-wrapper {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::ng-deep .filter-field .mat-mdc-form-field-input-control input,
+::ng-deep .filter-field .mat-mdc-select-value {
+  color: white !important;
+}
+
+::ng-deep .filter-field .mat-mdc-floating-label,
+::ng-deep .filter-field .mat-mdc-select-label {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+::ng-deep .filter-field .mdc-notched-outline__leading,
+::ng-deep .filter-field .mdc-notched-outline__notch,
+::ng-deep .filter-field .mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+::ng-deep .filter-field.mat-focused .mdc-notched-outline__leading,
+::ng-deep .filter-field.mat-focused .mdc-notched-outline__notch,
+::ng-deep .filter-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--accent-orange) !important;
+}
+
+::ng-deep .filter-field .mat-mdc-select-arrow {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Выпадающие списки */
+::ng-deep .mat-mdc-select-panel {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(71, 85, 105, 0.5) !important;
+}
+
+::ng-deep .mat-mdc-option {
+  color: white !important;
+}
+
+::ng-deep .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: rgba(249, 115, 22, 0.2) !important;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-actions button {
+  border-color: rgba(71, 85, 105, 0.4);
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.filter-actions button:hover:not(:disabled) {
+  border-color: var(--accent-orange);
+  color: var(--accent-orange) !important;
+  background-color: rgba(249, 115, 22, 0.1);
+}
+
+.filter-actions button mat-icon {
+  margin-right: 0.5rem;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.results-count {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
 }
 
-@media (max-width: 960px) {
-  .grid {
-    grid-template-columns: 1fr;
+.tickets-container {
+  position: relative;
+}
+
+.empty-details {
+  height: 100%;
+}
+
+.empty-details mat-card {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.empty-details-content {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.empty-details-content mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: var(--accent-orange);
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.empty-details-content h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.empty-details-content p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  z-index: 10;
+  color: white;
+  font-size: 0.875rem;
+}
+
+.loading-indicator mat-icon {
+  animation: spin 1s linear infinite;
+  color: var(--accent-orange);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
+@media (max-width: 960px) {
+  .tickets-page {
+    padding: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-group {
+    grid-template-columns: 1fr;
+  }
+}

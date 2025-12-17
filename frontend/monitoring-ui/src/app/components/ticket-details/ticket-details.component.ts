@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -24,7 +24,7 @@ import { WebsocketService } from '../../services/websocket.service';
   templateUrl: './ticket-details.component.html',
   styleUrls: ['./ticket-details.component.css'],
 })
-export class TicketDetailsComponent {
+export class TicketDetailsComponent implements OnChanges {
   @Input() ticket?: Ticket;
   responseBody = '';
   sending = false;
@@ -229,6 +229,27 @@ export class TicketDetailsComponent {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['ticket']) {
+      const currentTicket = changes['ticket'].currentValue;
+      const previousTicket = changes['ticket'].previousValue;
+      
+      if (currentTicket && currentTicket.id) {
+        console.log('TicketDetails: получен тикет', currentTicket.id, currentTicket.title);
+        
+        // Проверяем, что это действительно новый тикет
+        if (!previousTicket || previousTicket.id !== currentTicket.id) {
+          console.log('TicketDetails: это новый тикет, обновляем представление');
+          // Сбрасываем форму ответа при смене тикета
+          this.responseBody = '';
+          this.errorMessage = '';
+        }
+      } else if (!currentTicket) {
+        console.log('TicketDetails: тикет очищен');
+      }
+    }
   }
 }
 

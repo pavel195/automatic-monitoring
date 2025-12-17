@@ -1,5 +1,127 @@
-<div class="grid">
-  <app-tickets-board (selectTicket)="onSelect($event)"></app-tickets-board>
-  <app-ticket-details [ticket]="selected"></app-ticket-details>
-</div>
+<!-- Панель поиска и фильтров -->
+<div class="tickets-page">
+  <div class="search-filters-panel">
+    <mat-card class="search-card">
+      <!-- Полнотекстовый поиск -->
+      <div class="search-section">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Поиск по обращениям</mat-label>
+          <input 
+            matInput 
+            [(ngModel)]="searchQuery" 
+            (input)="onSearchChange()"
+            placeholder="Введите текст для поиска..."
+            autocomplete="off">
+          <mat-icon matPrefix>search</mat-icon>
+          <button 
+            mat-icon-button 
+            matSuffix 
+            *ngIf="searchQuery"
+            (click)="clearSearch()"
+            aria-label="Очистить поиск">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
 
+      <!-- Фильтры -->
+      <div class="filters-section">
+        <div class="filter-group">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Статус</mat-label>
+            <mat-select [(ngModel)]="filters.status" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">Все статусы</mat-option>
+              <mat-option value="new">Новое</mat-option>
+              <mat-option value="acknowledged">Подтверждено</mat-option>
+              <mat-option value="in_progress">В работе</mat-option>
+              <mat-option value="resolved">Решено</mat-option>
+              <mat-option value="closed">Закрыто</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Категория</mat-label>
+            <mat-select [(ngModel)]="filters.category" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">Все категории</mat-option>
+              <mat-option value="complaint">Жалоба</mat-option>
+              <mat-option value="praise">Благодарность</mat-option>
+              <mat-option value="request">Запрос</mat-option>
+              <mat-option value="incident">Инцидент</mat-option>
+              <mat-option value="suggestion">Предложение</mat-option>
+              <mat-option value="payment">Оплата</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Приоритет</mat-label>
+            <mat-select [(ngModel)]="filters.priority" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">Все приоритеты</mat-option>
+              <mat-option [value]="4">Критический</mat-option>
+              <mat-option [value]="3">Высокий</mat-option>
+              <mat-option [value]="2">Средний</mat-option>
+              <mat-option [value]="1">Низкий</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Тональность</mat-label>
+            <mat-select [(ngModel)]="filters.sentiment" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">Все</mat-option>
+              <mat-option value="positive">Позитивная</mat-option>
+              <mat-option value="neutral">Нейтральная</mat-option>
+              <mat-option value="negative">Негативная</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Группа</mat-label>
+            <mat-select [(ngModel)]="filters.group" (selectionChange)="applyFilters()">
+              <mat-option [value]="null">Все группы</mat-option>
+              <mat-option value="operations">Эксплуатация</mat-option>
+              <mat-option value="safety">Безопасность</mat-option>
+              <mat-option value="service">Сервис</mat-option>
+              <mat-option value="maintenance">Техобслуживание</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="filter-actions">
+          <button 
+            mat-stroked-button 
+            (click)="clearFilters()"
+            [disabled]="!hasActiveFilters()">
+            <mat-icon>clear</mat-icon>
+            Сбросить фильтры
+          </button>
+          <span class="results-count" *ngIf="filteredTickets.length !== allTickets.length">
+            Показано {{ filteredTickets.length }} из {{ allTickets.length }}
+          </span>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Список обращений -->
+  <div class="grid">
+    <div class="tickets-container">
+      <div class="loading-indicator" *ngIf="loading">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span>Поиск...</span>
+      </div>
+      <app-tickets-board 
+        [tickets]="filteredTickets"
+        [loading]="loading"
+        (selectTicket)="onSelect($event)">
+      </app-tickets-board>
+    </div>
+    <app-ticket-details [ticket]="selected"></app-ticket-details>
+      <mat-card>
+        <div class="empty-details-content">
+          <mat-icon>info</mat-icon>
+          <h3>Выберите обращение</h3>
+          <p>Кликните на обращение в списке, чтобы просмотреть детали</p>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>

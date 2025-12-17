@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
@@ -15,6 +15,8 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./tickets-board.component.css'],
 })
 export class TicketsBoardComponent implements OnInit, OnDestroy {
+  @Input() tickets: Ticket[] = [];
+  @Input() loading: boolean = false;
   @Output() selectTicket = new EventEmitter<Ticket>();
 
   private readonly transportLabels: Record<string, string> = {
@@ -63,7 +65,8 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
     'group',
     'created_at',
   ];
-  tickets: Ticket[] = [];
+  
+  selectedTicketId: number | null = null;
   private subscription = new Subscription();
 
   constructor(
@@ -72,21 +75,25 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadTickets();
-    
-    // Автообновление тикетов каждые 10 секунд
-    const intervalId = setInterval(() => {
+    // Если тикеты переданы через @Input, используем их
+    // Иначе загружаем самостоятельно (для обратной совместимости)
+    if (!this.tickets || this.tickets.length === 0) {
       this.loadTickets();
-    }, 10000);
-    this.subscription.add({ unsubscribe: () => clearInterval(intervalId) });
-    
-    this.subscription.add(
-      this.ws.stream().subscribe((event) => {
-        if (event) {
-          this.loadTickets();
-        }
-      })
-    );
+      
+      // Автообновление тикетов каждые 10 секунд
+      const intervalId = setInterval(() => {
+        this.loadTickets();
+      }, 10000);
+      this.subscription.add({ unsubscribe: () => clearInterval(intervalId) });
+      
+      this.subscription.add(
+        this.ws.stream().subscribe((event) => {
+          if (event) {
+            this.loadTickets();
+          }
+        })
+      );
+    }
   }
 
   loadTickets() {
@@ -105,8 +112,29 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
     });
   }
 
-  select(row: Ticket) {
-    this.selectTicket.emit(row);
+  select(row: Ticket, event?: Event) {
+    if (event) {
+      // Не останавливаем всплытие, чтобы событие дошло до родителя
+      // event.stopPropagation();
+    }
+    
+    if (!row || !row.id) {
+      console.warn('TicketsBoard: попытка выбрать пустую строку или тикет без ID', row);
+      return;
+    }
+    
+    console.log('TicketsBoard: выбран тикет', row.id, row.title, row);
+    
+    // Сохраняем выбранный ID для визуального выделения
+    this.selectedTicketId = row.id;
+    
+    // Эмитим событие синхронно
+    try {
+      this.selectTicket.emit(row);
+      console.log('TicketsBoard: событие selectTicket отправлено');
+    } catch (error) {
+      console.error('TicketsBoard: ошибка при отправке события', error);
+    }
   }
 
   priorityColor(priority: number): string {
