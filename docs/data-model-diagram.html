@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Схема модели данных</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background: #fff; }
+    .mermaid { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <h1>Схема модели данных</h1>
+  <p>Сохранить: правый клик по диаграмме → «Сохранить изображение как…» или Ctrl+S (страницу в PDF).</p>
+  <pre class="mermaid">
+erDiagram
+    users ||--|| UserProfile : "has profile"
+    users ||--o{ Company : "approved_by"
+    users ||--o{ Ticket : "assigned_to"
+    users ||--o{ TicketResponse : "author"
+
+    Company ||--o{ UserProfile : "has users"
+    Company ||--o{ TelegramBot : "has bots"
+    Company ||--o{ Ticket : "has tickets"
+    Company ||--o{ ChannelMessage : "has messages"
+
+    Ticket ||--o{ ChannelMessage : "contains"
+    Ticket ||--o{ Assignment : "has"
+    Ticket ||--o{ TicketResponse : "has responses"
+
+    ChannelMessage ||--o{ TicketResponse : "referenced by"
+
+    users {
+        int id PK
+        string username
+        string email
+        string password
+        string first_name
+        string last_name
+        boolean is_active
+        boolean is_staff
+        datetime date_joined
+    }
+
+    Company {
+        int id PK
+        string name
+        string description
+        string status
+        string contact_email
+        string contact_phone
+        int default_ack_sla_minutes
+        int default_resolve_sla_minutes
+        datetime created_at
+        datetime updated_at
+        datetime approved_at
+        int approved_by_id FK
+    }
+
+    UserProfile {
+        int id PK
+        int user_id FK
+        int company_id FK
+        string role
+        string phone
+        datetime created_at
+        datetime updated_at
+    }
+
+    TelegramBot {
+        int id PK
+        int company_id FK
+        string bot_token
+        string bot_username
+        json chat_ids
+        json discussion_chat_ids
+        boolean allow_direct
+        string status
+        string last_error
+        datetime created_at
+        datetime updated_at
+    }
+
+    Ticket {
+        int id PK
+        string title
+        string category
+        int priority
+        string status
+        string sentiment
+        boolean is_transport
+        string transport_mode
+        string assigned_group
+        datetime ack_deadline
+        datetime resolve_deadline
+        datetime acknowledged_at
+        datetime resolved_at
+        datetime created_at
+        datetime updated_at
+        int assigned_to_id FK
+        int company_id FK
+    }
+
+    ChannelMessage {
+        int id PK
+        string external_id
+        string channel
+        string author
+        string payload
+        json metadata
+        datetime received_at
+        boolean is_transport
+        boolean is_comment
+        string transport_mode
+        string source_chat_id
+        string parent_external_id
+        string thread_url
+        string sentiment
+        datetime created_at
+        int ticket_id FK
+        int company_id FK
+    }
+
+    Assignment {
+        int id PK
+        int ticket_id FK
+        string assignee
+        string channel
+        string notes
+        datetime created_at
+    }
+
+    TicketResponse {
+        int id PK
+        int ticket_id FK
+        int channel_message_id FK
+        int author_id FK
+        string channel
+        string body
+        string status
+        string external_message_id
+        datetime sent_at
+        datetime created_at
+    }
+  </pre>
+</body>
+</html>

@@ -1,0 +1,70 @@
+flowchart TB
+    %% Структура проекта enrollment_2019 (каталоги и файлы с пояснениями)
+
+    ROOT["enrollment_2019"]
+
+    subgraph PKG["analyzer — Python-пакет с проектом"]
+        direction TB
+
+        subgraph API["api"]
+            direction TB
+            HND["handlers — Обработчики"]
+            API_INIT["__init__.py"]
+            API_MAIN["__main__.py — Утилита для запуска REST API"]
+            APP["app.py — Описание aiohttp-приложения"]
+            MID["middleware.py"]
+            PAY["payloads.py — Инструкции по упаковке body aiohttp-ответов"]
+            SCH_API["schema.py — Схемы валидации запросов и ответов REST API"]
+        end
+
+        subgraph DB["db"]
+            direction TB
+            ALB["alembic — Миграции и всё, что с ними связано"]
+            DB_INIT["__init__.py"]
+            DB_MAIN["__main__.py — Утилита для управления состоянием БД"]
+            SCH_DB["schema.py — Описание схемы БД"]
+        end
+
+        subgraph UTL["utils — Утилиты"]
+            UTL_INIT["__init__.py"]
+        end
+    end
+
+    DEP["deploy — Описание деплоя, Ansible"]
+    TST["tests — Тесты"]
+
+    DF["Dockerfile"]
+    MAN["MANIFEST.in — Описание статических файлов, добавляемых в Python-пакет"]
+    README["README.rst — Описание проекта, инструкции по запуску"]
+    REQDEV["requirements.dev.txt — Зависимости для разработки/тестирования"]
+    REQ["requirements.txt — Зависимости для продакшена"]
+    SETUP["setup.py — Описание Python-пакета"]
+
+    ROOT --> PKG
+    ROOT --> DEP
+    ROOT --> TST
+    ROOT --> DF
+    ROOT --> MAN
+    ROOT --> README
+    ROOT --> REQDEV
+    ROOT --> REQ
+    ROOT --> SETUP
+
+    PKG --> API
+    PKG --> DB
+    PKG --> UTL
+
+    API --> HND
+    API --> API_INIT
+    API --> API_MAIN
+    API --> APP
+    API --> MID
+    API --> PAY
+    API --> SCH_API
+
+    DB --> ALB
+    DB --> DB_INIT
+    DB --> DB_MAIN
+    DB --> SCH_DB
+
+    UTL --> UTL_INIT

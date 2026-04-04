@@ -1,0 +1,36 @@
+flowchart TD
+    %% Диаграмма активности: отправка ответа оператора по тикету
+
+    S((Старт))
+    A[Оператор открывает тикет в Monitoring UI]
+    B[Вводит текст ответа]
+    C{Текст ответа не пустой?}
+    D[Вернуть 400: \"Текст ответа обязателен\"]
+
+    J1[" "]:::bar
+
+    E[Создать TicketResponse\nstatus = pending]
+    F[Извлечь контекст\nchat_id / reply_to_message_id]
+    G[Отправить сообщение в Telegram API]
+    H{Отправка успешна?}
+    I[Обновить TicketResponse:\nstatus = sent,\nexternal_message_id,\nsent_at]
+    K[Пометить TicketResponse:\nstatus = failed]
+
+    J2[" "]:::bar
+
+    L[Вернуть 201 Created в UI]
+    M[Вернуть ошибку в UI]
+    E1((Финиш))
+
+    S --> A --> B --> C
+    C -- "Нет" --> D --> E1
+    C -- "Да" --> J1
+
+    J1 --> E --> F --> G --> H
+    H -- "Да" --> I --> J2
+    H -- "Нет" --> K --> J2
+
+    J2 --> L --> E1
+    J2 --> M --> E1
+
+    classDef bar fill:#111,stroke:#111,color:#111;
