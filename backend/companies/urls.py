@@ -2,11 +2,12 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from companies.auth_views import login, logout, me
-from companies.views import CompanyViewSet, TelegramBotViewSet, UserProfileViewSet
+from companies.views import CompanyViewSet, TelegramBotViewSet, UserProfileViewSet, VkBotViewSet
 
 router = DefaultRouter()
 router.register("companies", CompanyViewSet, basename="company")
 router.register("bots", TelegramBotViewSet, basename="telegrambot")
+router.register("vk-bots", VkBotViewSet, basename="vkbot")
 router.register("users", UserProfileViewSet, basename="userprofile")
 
 urlpatterns = [

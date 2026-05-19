@@ -7,6 +7,7 @@ import { AnalyticsComponent } from './pages/analytics/analytics.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { TelegramBotsComponent } from './pages/telegram-bots/telegram-bots.component';
+import { VkBotsComponent } from './pages/vk-bots/vk-bots.component';
 import { IntegrationsComponent } from './pages/integrations/integrations.component';
 import { authGuard } from './guards/auth.guard';
 import { authInterceptor } from './interceptors/auth.interceptor';
@@ -41,6 +42,10 @@ const routes: Routes = [
       {
         path: 'telegram-bots',
         component: TelegramBotsComponent,
+      },
+      {
+        path: 'vk-bots',
+        component: VkBotsComponent,
       },
       {
         path: '',

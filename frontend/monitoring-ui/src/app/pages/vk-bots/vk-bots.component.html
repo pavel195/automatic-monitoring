@@ -1,0 +1,120 @@
+<div class="vk-bots-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>group</mat-icon>
+        Управление VK ботами
+      </mat-card-title>
+      <mat-card-subtitle>
+        Подключите сообщество VK для автоматического сбора сообщений
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="actions-bar">
+        <button mat-raised-button color="primary" (click)="openCreateForm()" [disabled]="loading">
+          <mat-icon>add</mat-icon>
+          Добавить сообщество
+        </button>
+      </div>
+
+      <!-- Форма -->
+      <mat-card *ngIf="showForm" class="form-card">
+        <mat-card-header>
+          <mat-card-title>
+            {{ editingBot ? 'Редактировать бота' : 'Добавить VK сообщество' }}
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form (ngSubmit)="onSubmit()">
+            <div class="info-message">
+              <mat-icon>info</mat-icon>
+              <span>
+                Для получения токена сообщества перейдите в Управление сообществом &rarr; Работа с API &rarr; Ключи доступа.
+                Включите Long Poll API и подпишитесь на событие «Входящее сообщение».
+              </span>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width" [class.mat-form-field-invalid]="hasFieldError('community_token')">
+              <mat-label>Токен сообщества *</mat-label>
+              <input matInput [(ngModel)]="communityToken" name="communityToken" required
+                     [type]="showToken ? 'text' : 'password'" />
+              <button mat-icon-button matSuffix (click)="showToken = !showToken" type="button">
+                <mat-icon>{{ showToken ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              <mat-error *ngIf="hasFieldError('community_token')">{{ getFieldError('community_token') }}</mat-error>
+              <mat-hint>Ключ доступа сообщества из настроек VK</mat-hint>
+            </mat-form-field>
+
+            <div class="error-message" *ngIf="error">
+              <mat-icon>error</mat-icon>
+              <span>{{ error }}</span>
+            </div>
+
+            <div class="form-actions">
+              <button mat-button type="button" (click)="cancelForm()" [disabled]="loading">Отмена</button>
+              <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+                {{ loading ? 'Сохранение...' : (editingBot ? 'Сохранить' : 'Создать') }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Empty -->
+      <div *ngIf="!loading && bots.length === 0 && !showForm" class="empty-state">
+        <mat-icon>group</mat-icon>
+        <h3>Нет подключённых сообществ VK</h3>
+        <p>Подключите сообщество VKontakte для автоматического сбора сообщений</p>
+      </div>
+
+      <div *ngIf="loading && bots.length === 0" class="loading-state">
+        <mat-icon>hourglass_empty</mat-icon>
+        <p>Загрузка...</p>
+      </div>
+
+      <!-- Table -->
+      <table mat-table [dataSource]="bots" *ngIf="bots.length > 0" class="bots-table">
+        <ng-container matColumnDef="community_name">
+          <th mat-header-cell *matHeaderCellDef>Сообщество</th>
+          <td mat-cell *matCellDef="let bot">
+            <div class="bot-info">
+              <mat-icon>group</mat-icon>
+              <div>
+                <span class="bot-name">{{ bot.community_name || 'Без названия' }}</span>
+                <span class="bot-id" *ngIf="bot.community_id">ID: {{ bot.community_id }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Статус</th>
+          <td mat-cell *matCellDef="let bot">
+            <span [class]="'status-badge status-' + bot.status">
+              {{ getStatusLabel(bot.status) }}
+            </span>
+            <div *ngIf="bot.last_error" class="error-text">
+              <mat-icon>error</mat-icon>
+              {{ bot.last_error }}
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Действия</th>
+          <td mat-cell *matCellDef="let bot">
+            <button mat-icon-button (click)="openEditForm(bot)" [disabled]="loading" title="Редактировать">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="deleteBot(bot)" [disabled]="loading" title="Удалить">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

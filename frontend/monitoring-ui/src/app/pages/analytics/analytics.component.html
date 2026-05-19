@@ -113,6 +113,31 @@
     </mat-card>
   </section>
 
+  <!-- Time Series Chart -->
+  <section class="timeseries-section" *ngIf="timeSeriesData.length">
+    <mat-card class="timeseries-card">
+      <div class="card-header">
+        <div>
+          <h3>Динамика обращений</h3>
+          <p class="card-subtitle">Количество обращений за {{ selectedPeriod === '24h' ? 'последние 24 часа' : selectedPeriod === '7d' ? 'последние 7 дней' : 'последние 30 дней' }}</p>
+        </div>
+      </div>
+      <div class="chart-container-wide">
+        <ngx-charts-line-chart
+          [scheme]="{ domain: ['#F97316'] }"
+          [results]="timeSeriesData"
+          [xAxis]="true"
+          [yAxis]="true"
+          [legend]="false"
+          [showGridLines]="true"
+          [autoScale]="true"
+          [roundDomains]="true"
+          [animations]="true">
+        </ngx-charts-line-chart>
+      </div>
+    </mat-card>
+  </section>
+
   <!-- Статусы и SLA -->
   <section class="status-section">
     <mat-card class="status-card">

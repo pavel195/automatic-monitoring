@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from companies.models import Company, TelegramBot, UserProfile
+from companies.models import Company, TelegramBot, UserProfile, VkBot
 from companies.permissions import (
     CompanyObjectPermission,
     IsCompanyAdmin,
@@ -15,6 +15,7 @@ from companies.serializers import (
     CompanySerializer,
     TelegramBotSerializer,
     UserProfileSerializer,
+    VkBotSerializer,
 )
 
 
@@ -153,6 +154,33 @@ class TelegramBotViewSet(viewsets.ModelViewSet):
             # Если нет компании у пользователя, возвращаем ошибку
             from rest_framework.exceptions import ValidationError
             raise ValidationError({"company": "У пользователя нет привязанной компании. Обратитесь к администратору."})
+
+
+class VkBotViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления VK ботами сообществ."""
+
+    serializer_class = VkBotSerializer
+    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return VkBot.objects.none()
+        if hasattr(user, "profile"):
+            profile = user.profile
+            if profile.is_superadmin():
+                return VkBot.objects.all()
+            if profile.company:
+                return VkBot.objects.filter(company=profile.company)
+        return VkBot.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if hasattr(user, "profile") and user.profile.company:
+            serializer.save(company=user.profile.company)
+        else:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({"company": "У пользователя нет привязанной компании."})
 
 
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):

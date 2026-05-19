@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 
 export interface ChannelMessage {
   id: number;
+  channel: string;
   author: string;
   payload: string;
   received_at: string;
@@ -63,8 +64,10 @@ export class ApiService {
     return this.http.post<TicketResponse>(`${this.base}/tickets/${id}/respond/`, { body });
   }
 
-  getMetrics(): Observable<any> {
-    return this.http.get(`${this.base}/analytics/metrics/`);
+  getMetrics(period?: string): Observable<any> {
+    const params: Record<string, string> = {};
+    if (period) params['period'] = period;
+    return this.http.get(`${this.base}/analytics/metrics/`, { params });
   }
 
   searchTickets(query: string) {

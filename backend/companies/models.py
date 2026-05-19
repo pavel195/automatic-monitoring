@@ -146,3 +146,33 @@ class TelegramBot(models.Model):
         verbose_name_plural = "Telegram боты"
         ordering = ["-created_at"]
 
+
+class VkBot(models.Model):
+    """Модель для хранения информации о VK ботах сообществ."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Активен"
+        INACTIVE = "inactive", "Неактивен"
+        ERROR = "error", "Ошибка"
+
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, related_name="vk_bots", verbose_name="Компания"
+    )
+    community_token = models.CharField(max_length=255, unique=True, verbose_name="Токен сообщества")
+    community_id = models.CharField(max_length=64, blank=True, verbose_name="ID сообщества")
+    community_name = models.CharField(max_length=255, blank=True, verbose_name="Название сообщества")
+    status = models.CharField(
+        max_length=32, choices=Status.choices, default=Status.INACTIVE, verbose_name="Статус"
+    )
+    last_error = models.TextField(blank=True, verbose_name="Последняя ошибка")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    def __str__(self):
+        return f"{self.company.name} - {self.community_name or 'VK бот'}"
+
+    class Meta:
+        verbose_name = "VK бот"
+        verbose_name_plural = "VK боты"
+        ordering = ["-created_at"]
+

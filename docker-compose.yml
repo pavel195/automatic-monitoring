@@ -36,6 +36,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ELASTIC_USERNAME=elastic
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
     ports:
       - "9200:9200"
     healthcheck:
@@ -95,6 +96,21 @@ services:
     networks:
       - app
 
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    networks:
+      - app
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   frontend:
     build:
       context: .
@@ -113,8 +129,8 @@ services:
 
 volumes:
   pgdata:
+  ollama_data:
 
 networks:
   app:
     driver: bridge
-

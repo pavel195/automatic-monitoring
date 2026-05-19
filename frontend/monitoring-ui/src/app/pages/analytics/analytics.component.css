@@ -1,8 +1,6 @@
 /* Профессиональная аналитическая панель */
 .analytics-page {
   padding: 2rem;
-  max-width: 1600px;
-  margin: 0 auto;
   color: var(--text-primary);
 }
 
@@ -433,6 +431,20 @@
 .chart-container-small {
   height: 200px;
   margin-top: 1rem;
+}
+
+.chart-container-wide {
+  height: 300px;
+  margin-top: 1rem;
+}
+
+/* Time Series */
+.timeseries-section {
+  margin-bottom: 2rem;
+}
+
+.timeseries-card {
+  padding: 1.5rem;
 }
 
 /* Insights секция */

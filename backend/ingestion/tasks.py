@@ -16,18 +16,22 @@ def poll_telegram():
     """Периодический опрос Telegram для всех активных ботов компаний."""
     from companies.models import TelegramBot
 
-    # Получаем все активные боты
     active_bots = TelegramBot.objects.filter(
         status=TelegramBot.Status.ACTIVE, company__status="active"
     )
-    
-    logger.info(f"Найдено активных ботов: {active_bots.count()}")
-    if active_bots.count() == 0:
+    bots_count = active_bots.count()
+
+    logger.info("Найдено активных ботов: %s", bots_count)
+    if bots_count == 0:
         logger.warning("Нет активных ботов для обработки. Проверьте статус ботов и компаний.")
 
     total_processed = 0
     for bot in active_bots:
-        logger.info(f"Обработка бота {bot.bot_username} (компания: {bot.company.name if bot.company else 'нет'})")
+        logger.info(
+            "Обработка бота %s (компания: %s)",
+            bot.bot_username,
+            bot.company.name if bot.company else "нет",
+        )
         try:
             connector = TelegramConnector(
                 bot_token=bot.bot_token,
@@ -35,53 +39,68 @@ def poll_telegram():
                 discussion_chat_ids=bot.discussion_chat_ids or [],
                 allow_private=bot.allow_direct,
             )
-            logger.info(f"Запрос обновлений для бота {bot.bot_username} (allow_private={bot.allow_direct}, chat_ids={len(bot.chat_ids or [])})")
+            logger.info(
+                "Запрос обновлений для бота %s (allow_private=%s, chat_ids=%s)",
+                bot.bot_username,
+                bot.allow_direct,
+                len(bot.chat_ids or []),
+            )
             events = connector.poll()
-            logger.info(f"Получено событий от Telegram API: {len(events)}")
+            logger.info("Получено событий от Telegram API: %s", len(events))
             processed = 0
             for event in events:
                 external_id = event.get("external_id")
-                logger.debug(f"Обработка события: external_id={external_id}, author={event.get('author')}, payload={event.get('payload', '')[:50]}")
-                
-                # Проверяем, существует ли уже
+                logger.debug(
+                    "Обработка события: external_id=%s, author=%s, payload=%s",
+                    external_id,
+                    event.get("author"),
+                    event.get("payload", "")[:50],
+                )
+
+                # Polling может вернуть уже обработанный update, поэтому проверяем id до сохранения.
                 exists = ChannelMessage.objects.filter(
                     external_id=external_id,
-                    channel=event.get("channel", ChannelMessage.Channel.TELEGRAM)
+                    channel=event.get("channel", ChannelMessage.Channel.TELEGRAM),
                 ).exists()
-                
+
                 if exists:
-                    logger.debug(f"Сообщение {external_id} уже существует в БД, пропускаем")
+                    logger.debug("Сообщение %s уже существует в БД, пропускаем", external_id)
                     continue
-                
+
                 received_at = event.get("received_at") or datetime.now(timezone.utc)
                 try:
-                msg, created = ChannelMessage.objects.get_or_create(
+                    msg, created = ChannelMessage.objects.get_or_create(
                         external_id=external_id,
-                    channel=event.get("channel", ChannelMessage.Channel.TELEGRAM),
-                    defaults={
-                        "author": event.get("author", ""),
-                        "payload": event.get("payload", ""),
-                        "metadata": event.get("metadata", {}),
-                        "received_at": received_at,
-                        "is_transport": True,
-                        "is_comment": event.get("is_comment", False),
-                        "parent_external_id": event.get("parent_external_id", ""),
-                        "thread_url": event.get("thread_url", ""),
-                        "source_chat_id": event.get("source_chat_id", ""),
-                        "sentiment": Sentiment.NEUTRAL,
-                        "transport_mode": TransportMode.OTHER,
-                        "company": bot.company,  # Устанавливаем компанию из бота
-                    },
-                )
-                if created:
-                        logger.info(f"Создано новое сообщение: ID={msg.id}, external_id={external_id}, payload={msg.payload[:50]}")
-                    classify_message.delay(str(msg.id))
+                        channel=event.get("channel", ChannelMessage.Channel.TELEGRAM),
+                        defaults={
+                            "author": event.get("author", ""),
+                            "payload": event.get("payload", ""),
+                            "metadata": event.get("metadata", {}),
+                            "received_at": received_at,
+                            "is_transport": True,
+                            "is_comment": event.get("is_comment", False),
+                            "parent_external_id": event.get("parent_external_id", ""),
+                            "thread_url": event.get("thread_url", ""),
+                            "source_chat_id": event.get("source_chat_id", ""),
+                            "sentiment": Sentiment.NEUTRAL,
+                            "transport_mode": TransportMode.OTHER,
+                            "company": bot.company,
+                        },
+                    )
+                    if created:
+                        logger.info(
+                            "Создано новое сообщение: ID=%s, external_id=%s, payload=%s",
+                            msg.id,
+                            external_id,
+                            msg.payload[:50],
+                        )
+                        classify_message.delay(str(msg.id))
                         connector.acknowledge(external_id)
-                    processed += 1
+                        processed += 1
                     else:
-                        logger.debug(f"Сообщение {external_id} уже существует (race condition)")
+                        logger.debug("Сообщение %s уже существует после get_or_create", external_id)
                 except Exception as e:
-                    logger.error(f"Ошибка при сохранении сообщения {external_id}: {e}", exc_info=True)
+                    logger.error("Ошибка при сохранении сообщения %s: %s", external_id, e, exc_info=True)
             if processed:
                 logger.info(
                     "Обработано %s сообщений для бота компании %s",
@@ -120,3 +139,73 @@ def poll_telegram():
     if total_processed:
         logger.info("Всего обработано %s телеграм-сообщений", total_processed)
 
+
+@shared_task
+def poll_vk():
+    """Периодический опрос VK для всех активных ботов сообществ."""
+    from companies.models import VkBot
+    from ingestion.connectors.vk_client import VkConnector
+
+    active_bots = VkBot.objects.filter(
+        status=VkBot.Status.ACTIVE, company__status="active"
+    )
+
+    logger.info("VK: найдено активных ботов: %s", active_bots.count())
+
+    total_processed = 0
+    for bot in active_bots:
+        logger.info("VK: обработка бота %s (сообщество: %s)", bot.community_name, bot.company.name)
+        try:
+            connector = VkConnector(
+                community_token=bot.community_token,
+                community_id=bot.community_id,
+            )
+            events = connector.poll()
+            logger.info("VK: получено событий: %s", len(events))
+            processed = 0
+            for event in events:
+                external_id = event.get("external_id")
+
+                exists = ChannelMessage.objects.filter(
+                    external_id=external_id,
+                    channel=ChannelMessage.Channel.VK,
+                ).exists()
+                if exists:
+                    continue
+
+                received_at = event.get("received_at") or datetime.now(timezone.utc)
+                try:
+                    msg, created = ChannelMessage.objects.get_or_create(
+                        external_id=external_id,
+                        channel=ChannelMessage.Channel.VK,
+                        defaults={
+                            "author": event.get("author", ""),
+                            "payload": event.get("payload", ""),
+                            "metadata": event.get("metadata", {}),
+                            "received_at": received_at,
+                            "is_transport": True,
+                            "sentiment": Sentiment.NEUTRAL,
+                            "transport_mode": TransportMode.OTHER,
+                            "company": bot.company,
+                            "source_chat_id": event.get("source_chat_id", ""),
+                        },
+                    )
+                    if created:
+                        logger.info("VK: создано сообщение ID=%s", msg.id)
+                        classify_message.delay(str(msg.id))
+                        connector.acknowledge(external_id)
+                        processed += 1
+                except Exception as e:
+                    logger.error("VK: ошибка сохранения сообщения %s: %s", external_id, e, exc_info=True)
+
+            if processed:
+                logger.info("VK: обработано %s сообщений для %s", processed, bot.company.name)
+                total_processed += processed
+        except Exception as exc:
+            logger.error("VK: ошибка при обработке бота %s: %s", bot.community_name, exc)
+            bot.status = VkBot.Status.ERROR
+            bot.last_error = str(exc)[:500]
+            bot.save(update_fields=["status", "last_error"])
+
+    if total_processed:
+        logger.info("VK: всего обработано %s сообщений", total_processed)

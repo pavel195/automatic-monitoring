@@ -4,7 +4,7 @@ import pytest
 
 from django.utils import timezone
 
-from tickets.models import ChannelMessage, Ticket
+from tickets.models import ChannelMessage, Ticket, TicketResponse
 from tickets.services import TicketResponseService
 
 
@@ -20,15 +20,15 @@ def test_ticket_response_service_sends_message(user_factory, ticket_factory):
         received_at=timezone.now(),
         ticket=ticket,
     )
-    service = TicketResponseService()
     fake_channel = MagicMock()
     fake_channel.send.return_value = "999"
-    service.channel = fake_channel
+    service = TicketResponseService(
+        channels={TicketResponse.Channel.TELEGRAM: fake_channel}
+    )
 
     response = service.respond(ticket, "Ответ", author=user_factory())
 
     assert response.status == response.Status.SENT
     assert response.external_message_id == "999"
     fake_channel.send.assert_called_once()
-
 

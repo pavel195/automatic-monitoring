@@ -11,9 +11,14 @@ module.exports = function (config) {
       require("@angular-devkit/build-angular/plugins/karma"),
     ],
     reporters: ["progress", "kjhtml"],
-    browsers: ["ChromeHeadless"],
-    singleRun: false,
+    browsers: ["ChromeHeadlessNoSandbox"],
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: "ChromeHeadless",
+        flags: ["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+      },
+    },
+    singleRun: true,
     restartOnFileChange: true,
   });
 };
-

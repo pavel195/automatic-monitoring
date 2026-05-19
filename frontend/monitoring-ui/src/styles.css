@@ -239,18 +239,13 @@ a:hover,
   box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
 }
 
-/* Toolbar с темно-синим фоном */
-mat-toolbar.mat-primary {
-  background: linear-gradient(135deg, var(--dark-blue-800) 0%, var(--dark-blue-900) 100%) !important;
-  color: var(--text-primary) !important;
-  box-shadow: var(--shadow-md);
-  border-bottom: 1px solid var(--card-border);
+/* Sidenav support */
+.mat-drawer-container {
+  background: transparent !important;
 }
 
-/* Активная ссылка с оранжевым акцентом */
-.active-link {
-  background-color: rgba(249, 115, 22, 0.15) !important;
-  border-left: 3px solid var(--accent-orange);
+.mat-drawer {
+  background: transparent !important;
 }
 
 /* Material Menu - темно-синий стиль с видимым текстом */

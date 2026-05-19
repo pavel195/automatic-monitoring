@@ -30,6 +30,7 @@ export class AnalyticsComponent implements OnInit {
   modeData: { name: string; value: number }[] = [];
   channelData: { name: string; value: number }[] = [];
   topicData: { name: string; value: number }[] = [];
+  timeSeriesData: { name: string; series: { name: string; value: number }[] }[] = [];
 
   // Цветовые схемы
   statusColorScheme = {
@@ -97,7 +98,7 @@ export class AnalyticsComponent implements OnInit {
   }
 
   loadMetrics(): void {
-    this.api.getMetrics().subscribe((metrics) => {
+    this.api.getMetrics(this.selectedPeriod).subscribe((metrics) => {
       this.metrics = metrics;
       this.processMetrics(metrics);
     });
@@ -151,12 +152,28 @@ export class AnalyticsComponent implements OnInit {
     if (metrics?.topic_breakdown) {
       this.topicData = metrics.topic_breakdown
         .map((item: any) => ({
-          name: this.modeLabels[item.topic] || 
-                this.categoryLabels[item.topic] || 
+          name: this.modeLabels[item.topic] ||
+                this.categoryLabels[item.topic] ||
                 item.topic,
           value: item.total,
         }))
         .sort((a: any, b: any) => b.value - a.value);
+    }
+
+    // Time series
+    if (metrics?.time_series?.length) {
+      this.timeSeriesData = [{
+        name: 'Обращения',
+        series: metrics.time_series.map((item: any) => {
+          const date = new Date(item.timestamp);
+          const label = this.selectedPeriod === '24h'
+            ? `${date.getHours()}:00`
+            : `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+          return { name: label, value: item.count };
+        }),
+      }];
+    } else {
+      this.timeSeriesData = [];
     }
   }
 
