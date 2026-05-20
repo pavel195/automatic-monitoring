@@ -26,6 +26,12 @@ def test_seed_demo_data_creates_realistic_workspace():
     assert Ticket.objects.filter(company__contact_email__endswith="@demo.transport.local").count() == 12
     assert Ticket.objects.filter(title__startswith="[DEMO]").count() == 0
     assert ChannelMessage.objects.filter(metadata__demo_seed=True).count() == 12
+    assert set(
+        ChannelMessage.objects.filter(metadata__demo_seed=True).values_list("channel", flat=True)
+    ) == {
+        ChannelMessage.Channel.TELEGRAM,
+        ChannelMessage.Channel.VK,
+    }
     assert TicketResponse.objects.filter(
         ticket__company__contact_email__endswith="@demo.transport.local"
     ).count() > 0
@@ -34,6 +40,12 @@ def test_seed_demo_data_creates_realistic_workspace():
         Ticket.objects.filter(company__contact_email="mosmetro@demo.transport.local")
         .values_list("category", flat=True)
     )
+    mosmetro_channels = set(
+        ChannelMessage.objects.filter(
+            ticket__company__contact_email="mosmetro@demo.transport.local",
+            metadata__demo_seed=True,
+        ).values_list("channel", flat=True)
+    )
     assert mosmetro_categories == {
         Ticket.Category.COMPLAINT,
         Ticket.Category.INCIDENT,
@@ -41,6 +53,10 @@ def test_seed_demo_data_creates_realistic_workspace():
         Ticket.Category.PAYMENT,
         Ticket.Category.PRAISE,
         Ticket.Category.SUGGESTION,
+    }
+    assert mosmetro_channels == {
+        ChannelMessage.Channel.TELEGRAM,
+        ChannelMessage.Channel.VK,
     }
 
     operator = User.objects.get(username="demo_mosmetro_operator_1")

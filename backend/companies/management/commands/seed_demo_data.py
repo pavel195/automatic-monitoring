@@ -141,11 +141,12 @@ STATUS_FLOW = [
 CHANNEL_FLOW = [
     ChannelMessage.Channel.TELEGRAM,
     ChannelMessage.Channel.VK,
-    ChannelMessage.Channel.EMAIL,
 ]
 
 
 class Command(BaseCommand):
+    """Наполняет локальный стенд реалистичными данными для ручной проверки."""
+
     help = "Создает правдоподобные демо-данные для локальной проверки интерфейса."
 
     def add_arguments(self, parser):
@@ -188,6 +189,8 @@ class Command(BaseCommand):
             self.stdout.write(f"  operator: demo_{company.demo_slug}_operator_1 / {password}")
 
     def _clear_demo_data(self):
+        """Удаляет только данные прошлого demo seed, не трогая обычные записи."""
+
         demo_companies = Company.objects.filter(contact_email__endswith=f"@{DEMO_DOMAIN}")
         demo_users = User.objects.filter(
             Q(username__startswith=DEMO_PREFIX) | Q(email__endswith=f"@{DEMO_DOMAIN}")
@@ -309,6 +312,8 @@ class Command(BaseCommand):
             )
 
     def _create_tickets(self, companies, users_by_company, count):
+        """Равномерно распределяет обращения по компаниям, статусам и тематикам."""
+
         randomizer = random.Random(42)
         categories = list(CATEGORY_CASES.keys())
         now = timezone.now()
@@ -358,7 +363,13 @@ class Command(BaseCommand):
             )
             ticket.refresh_from_db()
 
-            message = self._create_message(ticket, payload, index, created_at)
+            message = self._create_message(
+                ticket,
+                payload,
+                index,
+                company_ticket_number,
+                created_at,
+            )
             if status != Ticket.Status.NEW:
                 Assignment.objects.create(
                     ticket=ticket,
@@ -393,8 +404,8 @@ class Command(BaseCommand):
         resolved_at = acknowledged_at + timedelta(hours=resolved_hours)
         return acknowledged_at, resolved_at
 
-    def _create_message(self, ticket, payload, index, created_at):
-        channel = CHANNEL_FLOW[(index - 1) % len(CHANNEL_FLOW)]
+    def _create_message(self, ticket, payload, index, channel_number, created_at):
+        channel = CHANNEL_FLOW[(channel_number - 1) % len(CHANNEL_FLOW)]
         metadata = {
             "demo_seed": True,
             "source": "seed_demo_data",
