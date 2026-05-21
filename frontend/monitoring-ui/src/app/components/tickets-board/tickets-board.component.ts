@@ -1,11 +1,9 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
-import { ApiService, Ticket } from '../../services/api.service';
-import { WebsocketService } from '../../services/websocket.service';
-import { Subscription } from 'rxjs';
+import { Ticket } from '../../services/api.service';
 
 @Component({
   selector: 'app-tickets-board',
@@ -14,7 +12,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './tickets-board.component.html',
   styleUrls: ['./tickets-board.component.css'],
 })
-export class TicketsBoardComponent implements OnInit, OnDestroy {
+export class TicketsBoardComponent {
   @Input() tickets: Ticket[] = [];
   @Input() loading: boolean = false;
   @Output() selectTicket = new EventEmitter<Ticket>();
@@ -67,74 +65,15 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
   ];
   
   selectedTicketId: number | null = null;
-  private subscription = new Subscription();
 
-  constructor(
-    private readonly api: ApiService,
-    private readonly ws: WebsocketService
-  ) {}
-
-  ngOnInit(): void {
-    // Если тикеты переданы через @Input, используем их
-    // Иначе загружаем самостоятельно (для обратной совместимости)
-    if (!this.tickets || this.tickets.length === 0) {
-      this.loadTickets();
-      
-      // Автообновление тикетов каждые 10 секунд
-      const intervalId = setInterval(() => {
-        this.loadTickets();
-      }, 10000);
-      this.subscription.add({ unsubscribe: () => clearInterval(intervalId) });
-      
-      this.subscription.add(
-        this.ws.stream().subscribe((event) => {
-          if (event) {
-            this.loadTickets();
-          }
-        })
-      );
-    }
-  }
-
-  loadTickets() {
-    this.api.getTickets().subscribe({
-      next: (data: any) => {
-        this.tickets = Array.isArray(data) ? data : data.results || [];
-      },
-      error: (err) => {
-        console.error('Ошибка загрузки тикетов:', err);
-        this.tickets = [];
-        // Если ошибка авторизации, можно перенаправить на логин
-        if (err.status === 401 || err.status === 403) {
-          // Обработка будет в guard
-        }
-      },
-    });
-  }
-
-  select(row: Ticket, event?: Event) {
-    if (event) {
-      // Не останавливаем всплытие, чтобы событие дошло до родителя
-      // event.stopPropagation();
-    }
-    
+  select(row: Ticket) {
     if (!row || !row.id) {
       console.warn('TicketsBoard: попытка выбрать пустую строку или тикет без ID', row);
       return;
     }
-    
-    console.log('TicketsBoard: выбран тикет', row.id, row.title, row);
-    
-    // Сохраняем выбранный ID для визуального выделения
+
     this.selectedTicketId = row.id;
-    
-    // Эмитим событие синхронно
-    try {
-      this.selectTicket.emit(row);
-      console.log('TicketsBoard: событие selectTicket отправлено');
-    } catch (error) {
-      console.error('TicketsBoard: ошибка при отправке события', error);
-    }
+    this.selectTicket.emit(row);
   }
 
   priorityColor(priority: number): string {
@@ -229,9 +168,4 @@ export class TicketsBoardComponent implements OnInit, OnDestroy {
     }
     return this.sentimentLabels[sentiment] || sentiment;
   }
-
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-  }
 }
-

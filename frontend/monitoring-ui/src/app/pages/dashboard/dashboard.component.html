@@ -6,6 +6,26 @@
       <p class="hero-subtitle">Мониторинг обращений в реальном времени</p>
     </div>
 
+    <mat-card class="dashboard-state" *ngIf="loading">
+      <mat-icon>hourglass_empty</mat-icon>
+      <div>
+        <h3>Загружаем данные</h3>
+        <p>Собираем метрики и последние обращения.</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="dashboard-state dashboard-error" *ngIf="!loading && errorMessage">
+      <mat-icon>error_outline</mat-icon>
+      <div>
+        <h3>Данные не загрузились</h3>
+        <p>{{ errorMessage }}</p>
+      </div>
+      <button mat-stroked-button color="accent" (click)="loadData()">
+        <mat-icon>refresh</mat-icon>
+        Повторить
+      </button>
+    </mat-card>
+
     <!-- KPI Row -->
     <div class="kpi-grid" *ngIf="metrics">
       <div class="kpi-item kpi-primary">

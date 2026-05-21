@@ -31,6 +31,18 @@ def company_admin(company):
     return user
 
 
+@pytest.fixture
+def operator(company):
+    """Фикстура для создания оператора компании."""
+    user = User.objects.create_user(
+        username="operator", email="operator@test.com", password="test123"
+    )
+    UserProfile.objects.create(
+        user=user, company=company, role=UserProfile.Role.OPERATOR
+    )
+    return user
+
+
 @pytest.mark.django_db
 @patch("companies.serializers.requests.get")
 def test_telegram_bot_token_validation(mock_get, company_admin, company):
@@ -108,3 +120,42 @@ def test_telegram_bot_belongs_to_company(company):
     assert company.bots.count() == 1
     assert company.bots.first() == bot
 
+
+@pytest.mark.django_db
+def test_operator_cannot_create_telegram_bot(operator):
+    """Оператор не должен управлять интеграциями компании."""
+    from rest_framework.test import APIClient
+
+    client = APIClient()
+    client.force_authenticate(user=operator)
+
+    response = client.post(
+        "/api/companies/bots/",
+        {
+            "bot_token": "123456:ABC-DEF",
+            "chat_ids": ["-1001234567890"],
+            "allow_direct": True,
+        },
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_operator_cannot_create_vk_bot(operator):
+    """Оператор не должен подключать VK-сообщества."""
+    from rest_framework.test import APIClient
+
+    client = APIClient()
+    client.force_authenticate(user=operator)
+
+    response = client.post(
+        "/api/companies/vk-bots/",
+        {
+            "community_token": "vk-token",
+            "community_id": "123",
+            "community_name": "Test VK",
+        },
+    )
+
+    assert response.status_code == 403

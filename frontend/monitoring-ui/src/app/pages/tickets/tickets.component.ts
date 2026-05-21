@@ -129,14 +129,7 @@ export class TicketsComponent implements OnInit {
           );
         }
 
-        // Если результатов поиска нет, но есть тикеты, применяем фильтры ко всем
-        if (searchResults.length === 0 && this.allTickets.length > 0) {
-          // Возможно, поиск не нашел совпадений, но показываем все с фильтрами
-          this.filteredTickets = this.applyFiltersToTickets(this.allTickets);
-        } else {
-          // Применяем фильтры к результатам поиска
-          this.filteredTickets = this.applyFiltersToTickets(searchResults);
-        }
+        this.filteredTickets = this.applyFiltersToTickets(searchResults);
         
         this.loading = false;
       },

@@ -31,4 +31,3 @@ def test_ticket_response_service_sends_message(user_factory, ticket_factory):
     assert response.status == response.Status.SENT
     assert response.external_message_id == "999"
     fake_channel.send.assert_called_once()
-

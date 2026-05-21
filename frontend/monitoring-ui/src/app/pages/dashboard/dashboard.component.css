@@ -22,6 +22,42 @@
   color: var(--text-muted);
 }
 
+.dashboard-state {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background: rgba(30, 41, 59, 0.55);
+  border: 1px solid rgba(71, 85, 105, 0.35);
+}
+
+.dashboard-state mat-icon {
+  color: var(--accent-orange);
+  flex-shrink: 0;
+}
+
+.dashboard-state h3 {
+  margin: 0 0 0.25rem 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.dashboard-state p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dashboard-error {
+  border-left: 4px solid var(--error);
+}
+
+.dashboard-error button {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 /* KPI Grid */
 .kpi-grid {
   display: grid;

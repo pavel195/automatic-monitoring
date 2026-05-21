@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { catchError, forkJoin, of } from 'rxjs';
 import { ApiService, Ticket } from '../../services/api.service';
 
 @Component({
@@ -23,6 +24,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   metrics: any;
   latestTickets: Ticket[] = [];
   loading = true;
+  errorMessage = '';
   sentimentStats: { label: string; percent: number; color: string }[] = [];
   private refreshInterval?: ReturnType<typeof setInterval>;
 
@@ -59,23 +61,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadData() {
-    this.api.getMetrics().subscribe({
-      next: (metrics) => {
+    this.loading = true;
+    this.errorMessage = '';
+
+    forkJoin({
+      metrics: this.api.getMetrics().pipe(catchError(() => of(null))),
+      tickets: this.api.getTickets().pipe(catchError(() => of(null))),
+    }).subscribe(({ metrics, tickets }) => {
+      if (metrics) {
         this.metrics = metrics;
         this.sentimentStats = this.buildSentimentStats(metrics?.sentiment_breakdown || []);
-      },
-      error: () => {},
-    });
-    this.api.getTickets().subscribe({
-      next: (data: any) => {
-        const tickets = Array.isArray(data) ? data : data.results || [];
-        this.latestTickets = tickets.slice(0, 5);
-        this.loading = false;
-      },
-      error: () => {
+      } else {
+        this.metrics = null;
+        this.sentimentStats = [];
+      }
+
+      if (tickets) {
+        const items = Array.isArray(tickets) ? tickets : tickets.results || [];
+        this.latestTickets = items.slice(0, 5);
+      } else {
         this.latestTickets = [];
-        this.loading = false;
-      },
+      }
+
+      if (!metrics && !tickets) {
+        this.errorMessage = 'Не удалось загрузить данные. Проверьте авторизацию и доступность backend.';
+      } else if (!metrics) {
+        this.errorMessage = 'Не удалось загрузить метрики главной страницы.';
+      }
+
+      this.loading = false;
     });
   }
 

@@ -9,7 +9,7 @@ import { RegisterComponent } from './pages/register/register.component';
 import { TelegramBotsComponent } from './pages/telegram-bots/telegram-bots.component';
 import { VkBotsComponent } from './pages/vk-bots/vk-bots.component';
 import { IntegrationsComponent } from './pages/integrations/integrations.component';
-import { authGuard } from './guards/auth.guard';
+import { authGuard, companyAdminGuard } from './guards/auth.guard';
 import { authInterceptor } from './interceptors/auth.interceptor';
 
 const routes: Routes = [
@@ -36,7 +36,7 @@ const routes: Routes = [
   { 
     path: 'integrations', 
     component: IntegrationsComponent, 
-    canActivate: [authGuard],
+    canActivate: [authGuard, companyAdminGuard],
     data: { requiresAuth: true },
     children: [
       {
@@ -68,4 +68,3 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
   ],
 };
-

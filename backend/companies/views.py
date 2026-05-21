@@ -102,7 +102,7 @@ class TelegramBotViewSet(viewsets.ModelViewSet):
     """ViewSet для управления Telegram ботами."""
 
     serializer_class = TelegramBotSerializer
-    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+    permission_classes = [IsCompanyAdmin, CompanyObjectPermission]
 
     def get_queryset(self):
         """Фильтрация ботов по правам доступа."""
@@ -160,7 +160,7 @@ class VkBotViewSet(viewsets.ModelViewSet):
     """ViewSet для управления VK ботами сообществ."""
 
     serializer_class = VkBotSerializer
-    permission_classes = [IsCompanyMember, CompanyObjectPermission]
+    permission_classes = [IsCompanyAdmin, CompanyObjectPermission]
 
     def get_queryset(self):
         user = self.request.user
@@ -208,4 +208,3 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
                 return UserProfile.objects.filter(user=user)
 
         return UserProfile.objects.none()
-

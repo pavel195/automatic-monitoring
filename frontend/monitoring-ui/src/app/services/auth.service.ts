@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, catchError, of, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
@@ -23,6 +23,11 @@ export interface UserProfile {
 
 export interface AuthResponse {
   token: string;
+  user: User;
+  profile: UserProfile | null;
+}
+
+export interface CurrentUserResponse {
   user: User;
   profile: UserProfile | null;
 }
@@ -181,21 +186,53 @@ export class AuthService {
     return profile?.role === 'company_admin';
   }
 
-  private loadCurrentUser(): void {
+  ensureCurrentUser(): Observable<CurrentUserResponse | null> {
+    const user = this.currentUserSubject.value;
+    if (user) {
+      return of({ user, profile: this.currentProfileSubject.value });
+    }
+
     const token = this.getToken();
     if (!token) {
-      return;
+      return of(null);
     }
-    
+
+    return this.fetchCurrentUser().pipe(
+      catchError((err) => {
+        if (err.status === 401) {
+          console.warn('[AuthService] Токен невалидный, очищаем сессию');
+          this.clearAuth();
+        } else {
+          console.warn('[AuthService] Ошибка загрузки пользователя:', err.status, err.statusText);
+        }
+        return of(null);
+      })
+    );
+  }
+
+  private fetchCurrentUser(): Observable<CurrentUserResponse> {
+    const token = this.getToken();
+    if (!token) {
+      throw new Error('Missing auth token');
+    }
     const headers = new HttpHeaders().set('Authorization', `Token ${token}`);
-    this.http.get<{ user: User; profile: UserProfile | null }>(
+    return this.http.get<CurrentUserResponse>(
       `${this.base}/companies/auth/me/`,
       { headers }
-    ).subscribe({
-      next: (response) => {
+    ).pipe(
+      tap((response) => {
         this.currentUserSubject.next(response.user);
         this.currentProfileSubject.next(response.profile);
-      },
+      })
+    );
+  }
+
+  private loadCurrentUser(): void {
+    if (!this.getToken()) {
+      return;
+    }
+
+    this.fetchCurrentUser().subscribe({
       error: (err) => {
         // Очищаем токен только если получили 401 (невалидный токен)
         // 403 или другие ошибки могут быть временными
@@ -210,4 +247,3 @@ export class AuthService {
     });
   }
 }
-
