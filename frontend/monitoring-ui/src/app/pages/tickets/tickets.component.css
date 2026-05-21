@@ -156,6 +156,7 @@
 
 .tickets-container {
   position: relative;
+  min-width: 0;
 }
 
 .empty-details {
@@ -240,5 +241,25 @@
 
   .filter-group {
     grid-template-columns: 1fr;
+  }
+
+  .tickets-container {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  app-tickets-board {
+    display: block;
+    min-width: 720px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tickets-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .search-card {
+    padding: 1rem;
   }
 }

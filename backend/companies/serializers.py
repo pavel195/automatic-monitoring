@@ -1,6 +1,11 @@
+import logging
+
+import requests
 from rest_framework import serializers
 
-from companies.models import Company, TelegramBot, UserProfile
+from companies.models import Company, TelegramBot, UserProfile, VkBot
+
+logger = logging.getLogger(__name__)
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -131,11 +136,6 @@ class TelegramBotSerializer(serializers.ModelSerializer):
 
     def validate_bot_token(self, value):
         """Валидация токена бота через Telegram API."""
-        import requests
-        import logging
-
-        logger = logging.getLogger(__name__)
-        
         if not value or not value.strip():
             raise serializers.ValidationError("Токен бота не может быть пустым.")
 
@@ -175,7 +175,6 @@ class TelegramBotSerializer(serializers.ModelSerializer):
         bot_username = getattr(self, "_bot_username", "")
         # Если username не был получен, пытаемся получить его снова
         if not bot_username:
-            import requests
             try:
                 response = requests.get(
                     f"https://api.telegram.org/bot{validated_data['bot_token']}/getMe",
@@ -192,6 +191,78 @@ class TelegramBotSerializer(serializers.ModelSerializer):
             **validated_data,
             bot_username=bot_username,
             status=TelegramBot.Status.ACTIVE,
+        )
+        return bot
+
+
+class VkBotSerializer(serializers.ModelSerializer):
+    """Сериализатор для VK бота сообщества."""
+
+    class Meta:
+        model = VkBot
+        fields = [
+            "id",
+            "company",
+            "community_token",
+            "community_id",
+            "community_name",
+            "status",
+            "last_error",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "company",
+            "community_id",
+            "community_name",
+            "status",
+            "last_error",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate_community_token(self, value):
+        """Валидация токена сообщества через VK API."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Токен сообщества не может быть пустым.")
+
+        try:
+            resp = requests.post(
+                "https://api.vk.com/method/groups.getById",
+                data={
+                    "access_token": value.strip(),
+                    "v": "5.199",
+                },
+                timeout=10,
+            )
+            data = resp.json()
+            if "error" in data:
+                error = data["error"]
+                raise serializers.ValidationError(
+                    f"Неверный токен: {error.get('error_msg', 'Неизвестная ошибка')}"
+                )
+            groups = data.get("response", {}).get("groups", data.get("response", []))
+            if groups:
+                group = groups[0] if isinstance(groups, list) else groups
+                self._community_id = str(group.get("id", ""))
+                self._community_name = group.get("name", "")
+                logger.info("VK токен валиден, сообщество: %s (id=%s)", self._community_name, self._community_id)
+            return value.strip()
+        except serializers.ValidationError:
+            raise
+        except Exception as e:
+            logger.error("Ошибка валидации VK токена: %s", e)
+            raise serializers.ValidationError(f"Не удалось проверить токен: {str(e)}")
+
+    def create(self, validated_data):
+        community_id = getattr(self, "_community_id", "")
+        community_name = getattr(self, "_community_name", "")
+        bot = VkBot.objects.create(
+            **validated_data,
+            community_id=community_id,
+            community_name=community_name,
+            status=VkBot.Status.ACTIVE,
         )
         return bot
 
@@ -222,4 +293,3 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
-

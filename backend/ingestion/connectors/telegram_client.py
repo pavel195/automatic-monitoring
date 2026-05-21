@@ -39,29 +39,24 @@ class TelegramConnector(BaseConnector):
 
     def __init__(self, bot_token=None, chat_ids=None, discussion_chat_ids=None, allow_private=False):
         """Инициализация коннектора с параметрами бота.
-        
-        Args:
-            bot_token: Токен бота (если не указан, берется из env)
-            chat_ids: Список ID чатов для мониторинга
-            discussion_chat_ids: Список ID чатов для обсуждений
-            allow_private: Разрешить личные сообщения
+
+        Если списки чатов не переданы явно, коннектор берет их из окружения.
         """
         self.token = bot_token or os.getenv("TELEGRAM_BOT_TOKEN", "")
         if chat_ids is None:
-        monitor_ids = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
+            monitor_ids = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
             self.chat_ids = self._parse_chat_ids(monitor_ids)
         else:
             self.chat_ids = set(str(cid) for cid in chat_ids) if chat_ids else set()
-        
+
         if discussion_chat_ids is None:
-        discussion_ids = os.getenv("TELEGRAM_DISCUSSION_CHAT_IDS", "")
-        self.discussion_chat_ids = self._parse_chat_ids(discussion_ids)
+            discussion_ids = os.getenv("TELEGRAM_DISCUSSION_CHAT_IDS", "")
+            self.discussion_chat_ids = self._parse_chat_ids(discussion_ids)
         else:
             self.discussion_chat_ids = set(str(cid) for cid in discussion_chat_ids) if discussion_chat_ids else set()
-        
+
         self.allow_private = allow_private or os.getenv("TELEGRAM_ALLOW_DIRECT", "0") in ("1", "true")
         self.api_url = f"https://api.telegram.org/bot{self.token}"
-        # Уникальный ключ для offset каждого бота
         bot_id = self.token[:10] if self.token else "default"
         self.offset_key = f"ingestion:telegram_offset:{bot_id}"
         self._offset = 0
@@ -76,24 +71,23 @@ class TelegramConnector(BaseConnector):
 
         params = {"timeout": 5, "offset": self._offset}
         try:
-        response = requests.get(f"{self.api_url}/getUpdates", params=params, timeout=10)
-        response.raise_for_status()
+            response = requests.get(f"{self.api_url}/getUpdates", params=params, timeout=10)
+            response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            # Обработка ошибки 409 Conflict (параллельные запросы) - это нормально, просто пропускаем
-            if e.response.status_code == 409:
+            status_code = e.response.status_code if e.response is not None else None
+            if status_code == 409:
                 logger.debug("Telegram API: 409 Conflict (параллельные запросы), пропускаем этот цикл. Offset: %s", self._offset)
                 return []
-            # Для других HTTP ошибок логируем и пробрасываем
-            logger.error("Telegram API HTTP ошибка %s: %s", e.response.status_code, e.response.text[:200])
+            response_text = e.response.text[:200] if e.response is not None else ""
+            logger.error("Telegram API HTTP ошибка %s: %s", status_code, response_text)
             raise
         except requests.exceptions.RequestException as e:
-            # Сетевые ошибки - логируем, но не падаем
             logger.warning("Ошибка сети при запросе к Telegram API: %s", e)
             return []
         except Exception as e:
             logger.error("Неожиданная ошибка при запросе к Telegram API: %s", e)
             raise
-        
+
         payload = response.json()
         if not payload.get("ok"):
             logger.error("Ошибка чтения Telegram: %s", payload)
@@ -139,12 +133,15 @@ class TelegramConnector(BaseConnector):
                     thread_url = f"https://t.me/{origin_username}/{parent_external_id}"
 
             author = self._extract_author(message)
+            attachments = self._extract_attachments(message)
+
             metadata = {
                 "chat_id": chat.get("id"),
                 "chat_type": chat_type,
                 "discussion_chat": is_comment,
                 "parent_external_id": parent_external_id,
                 "origin_username": origin_username,
+                "attachments": attachments,
                 "raw": message,
             }
             if is_private:
@@ -197,7 +194,11 @@ class TelegramConnector(BaseConnector):
     def _get_stored_offset(self) -> int:
         if not self.redis:
             return 0
-        value = self.redis.get(self.offset_key)
+        try:
+            value = self.redis.get(self.offset_key)
+        except Exception as exc:  # pragma: no cover - зависит от внешнего Redis
+            logger.warning("Не удалось прочитать offset Telegram: %s", exc)
+            return 0
         try:
             return int(value) if value is not None else 0
         except ValueError:  # pragma: no cover
@@ -266,6 +267,35 @@ class TelegramConnector(BaseConnector):
         return ids
 
     @staticmethod
+    def _extract_attachments(message: Mapping) -> list[dict[str, str]]:
+        """Сохраняет только компактные ссылки на вложения из Telegram update."""
+        attachments = []
+        if message.get("photo"):
+            photos = message["photo"]
+            best = max(photos, key=lambda p: p.get("width", 0) * p.get("height", 0))
+            attachments.append({"type": "photo", "file_id": best.get("file_id", "")})
+        if message.get("document"):
+            doc = message["document"]
+            attachments.append({
+                "type": "document",
+                "file_id": doc.get("file_id", ""),
+                "file_name": doc.get("file_name", ""),
+            })
+        if message.get("video"):
+            video = message["video"]
+            attachments.append({"type": "video", "file_id": video.get("file_id", "")})
+        if message.get("voice"):
+            attachments.append({"type": "voice", "file_id": message["voice"].get("file_id", "")})
+        if message.get("audio"):
+            audio = message["audio"]
+            attachments.append({
+                "type": "audio",
+                "file_id": audio.get("file_id", ""),
+                "file_name": audio.get("file_name", ""),
+            })
+        return attachments
+
+    @staticmethod
     def _extract_author(message: Mapping) -> str:
         author = message.get("from") or {}
         return author.get("username") or author.get("first_name") or "unknown"
@@ -307,4 +337,3 @@ class TelegramConnector(BaseConnector):
     @staticmethod
     def _private_action_key(chat_id: str) -> str:
         return f"ingestion:telegram:last_action:{chat_id}"
-

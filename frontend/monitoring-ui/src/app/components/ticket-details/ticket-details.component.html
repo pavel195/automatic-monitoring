@@ -19,33 +19,23 @@
       </div>
       <div>
         <p class="label">Тематика</p>
-        <p class="value">
-          {{ transportLabel(ticket) }}
-        </p>
+        <p class="value">{{ transportLabel(ticket) }}</p>
       </div>
       <div>
         <p class="label">SLA подтверждения</p>
-        <p class="value">
-          {{ ticket.ack_deadline | date: 'short' }}
-        </p>
+        <p class="value">{{ ticket.ack_deadline | date: 'short' }}</p>
       </div>
       <div>
         <p class="label">SLA решения</p>
-        <p class="value">
-          {{ ticket.resolve_deadline | date: 'short' }}
-        </p>
+        <p class="value">{{ ticket.resolve_deadline | date: 'short' }}</p>
       </div>
       <div>
         <p class="label">Дата создания</p>
-        <p class="value">
-          {{ formatDate(ticket.created_at) }}
-        </p>
+        <p class="value">{{ formatDate(ticket.created_at) }}</p>
       </div>
       <div *ngIf="ticket.updated_at">
-        <p class="label">Последнее обновление</p>
-        <p class="value">
-          {{ formatDate(ticket.updated_at) }}
-        </p>
+        <p class="label">Обновлено</p>
+        <p class="value">{{ formatDate(ticket.updated_at) }}</p>
       </div>
     </mat-card-content>
     <mat-card-actions>
@@ -61,13 +51,23 @@
   <mat-card class="conversation">
     <mat-card-title>Диалог</mat-card-title>
     <div class="timeline" *ngIf="conversation.length; else noConversation">
-      <div
-        class="message"
-        [class.outbound]="item.direction === 'outbound'"
-        *ngFor="let item of conversation"
-      >
-        <p class="author">{{ item.author }}</p>
+      <div class="message"
+           [class.outbound]="item.direction === 'outbound'"
+           *ngFor="let item of conversation">
+        <div class="message-header">
+          <span class="author">{{ item.author }}</span>
+          <span class="channel-badge" *ngIf="item.channel">
+            <mat-icon class="channel-icon">{{ getChannelIcon(item.channel) }}</mat-icon>
+          </span>
+        </div>
         <p class="text">{{ item.text }}</p>
+        <!-- Attachments -->
+        <div class="attachments" *ngIf="item.attachments?.length">
+          <div class="attachment-item" *ngFor="let att of item.attachments">
+            <mat-icon class="attachment-icon">{{ getAttachmentIcon(att.type) }}</mat-icon>
+            <span class="attachment-label">{{ att.file_name || att.type }}</span>
+          </div>
+        </div>
         <p class="time">
           {{ item.timestamp | date: 'short' }}
           <span *ngIf="item.meta" class="tone">{{ item.meta }}</span>
@@ -80,23 +80,14 @@
     <mat-card-title>Ответить пассажиру</mat-card-title>
     <mat-card-content>
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Сообщение в Telegram</mat-label>
-        <textarea
-          matInput
-          rows="4"
-          [(ngModel)]="responseBody"
-          placeholder="Сообщение будет отправлено как ответ в Telegram-чате"
-        ></textarea>
+        <mat-label>Сообщение</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="responseBody"
+                  placeholder="Сообщение будет отправлено как ответ через исходный канал"></textarea>
       </mat-form-field>
       <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
     </mat-card-content>
     <mat-card-actions>
-      <button
-        mat-raised-button
-        color="accent"
-        (click)="sendResponse()"
-        [disabled]="sending"
-      >
+      <button mat-raised-button color="accent" (click)="sendResponse()" [disabled]="sending">
         <mat-icon>send</mat-icon>
         {{ sending ? 'Отправка...' : 'Отправить' }}
       </button>
@@ -113,4 +104,3 @@
 <ng-template #noConversation>
   <p class="muted">Диалог пока пуст.</p>
 </ng-template>
-

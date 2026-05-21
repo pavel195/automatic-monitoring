@@ -1,94 +1,103 @@
-<mat-toolbar class="app-toolbar" color="primary">
-  <div class="logo">
-    <mat-icon>hub</mat-icon>
-    <span>{{ title }}</span>
-  </div>
-  <span class="spacer"></span>
-  <ng-container *ngIf="isAuthenticated$ | async; else notAuthenticated">
-    <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
-      Главная
-    </a>
-    <a mat-button routerLink="/tickets" routerLinkActive="active-link">Обращения</a>
-    <a mat-button routerLink="/analytics" routerLinkActive="active-link">Аналитика</a>
-    <button mat-button [matMenuTriggerFor]="integrationsMenu">
-      <mat-icon>integration_instructions</mat-icon>
-      Интеграции
-      <mat-icon>arrow_drop_down</mat-icon>
-    </button>
-    <mat-menu #integrationsMenu="matMenu">
-      <button mat-menu-item routerLink="/integrations/telegram-bots" class="telegram-menu-item">
-        <svg class="telegram-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" fill="currentColor"/>
-        </svg>
-        <span>Telegram</span>
-      </button>
-      <!-- В будущем можно добавить другие интеграции -->
-    </mat-menu>
-    <button mat-raised-button color="accent" routerLink="/tickets">
-      <mat-icon>flash_on</mat-icon>
-      Реагировать
-    </button>
-    <button mat-icon-button [matMenuTriggerFor]="userMenu">
-      <mat-icon>account_circle</mat-icon>
-    </button>
-    <mat-menu #userMenu="matMenu">
-      <div class="user-menu-header" *ngIf="currentUser$ | async as user">
-        <p class="user-name">{{ user.first_name || user.username }}</p>
-        <p class="user-email">{{ user.email }}</p>
-        <p class="user-role" *ngIf="currentProfile$ | async as profile">
-          {{ profile.role === 'superadmin' ? 'Супер-администратор' : 
-             profile.role === 'company_admin' ? 'Администратор компании' : 
-             'Оператор' }}
-        </p>
-      </div>
-      <mat-divider></mat-divider>
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span>Выйти</span>
-      </button>
-    </mat-menu>
-  </ng-container>
-  <ng-template #notAuthenticated>
-    <button mat-button routerLink="/register">
-      <mat-icon>person_add</mat-icon>
-      Регистрация
-    </button>
-    <button mat-button routerLink="/login">
-      <mat-icon>login</mat-icon>
-      Войти
-    </button>
-  </ng-template>
-</mat-toolbar>
-
 <ng-container *ngIf="isAuthenticated$ | async; else showLoginPage">
-  <section class="hero">
-    <div class="hero__content">
-      <p class="eyebrow">Единый центр управления транспортом</p>
-      <h1>Мониторинг обращений и SLA в реальном времени</h1>
-      <p class="subtitle">
-        Автоматический сбор из Telegram, маршрутизация по критичности и быстрые ответы пассажирам.
-      </p>
-      <div class="hero__actions">
-        <button mat-flat-button color="accent" routerLink="/tickets">
+  <div class="app-layout" [class.collapsed]="collapsed">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Logo -->
+      <div class="sidebar-header" (click)="toggleSidebar()">
+        <div class="logo-icon">
+          <mat-icon>hub</mat-icon>
+        </div>
+        <span class="logo-text" *ngIf="!collapsed">{{ title }}</span>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav">
+        <a class="nav-item" routerLink="/" routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: true }"
+           [matTooltip]="collapsed ? 'Главная' : ''" matTooltipPosition="right">
+          <mat-icon>dashboard</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">Главная</span>
+        </a>
+
+        <a class="nav-item" routerLink="/tickets" routerLinkActive="active"
+           [matTooltip]="collapsed ? 'Обращения' : ''" matTooltipPosition="right">
           <mat-icon>support_agent</mat-icon>
-          Перейти к инцидентам
-        </button>
-        <button mat-stroked-button color="primary" routerLink="/analytics">
+          <span class="nav-label" *ngIf="!collapsed">Обращения</span>
+        </a>
+
+        <a class="nav-item" routerLink="/analytics" routerLinkActive="active"
+           [matTooltip]="collapsed ? 'Аналитика' : ''" matTooltipPosition="right">
           <mat-icon>insights</mat-icon>
-          Аналитика SLA
+          <span class="nav-label" *ngIf="!collapsed">Аналитика</span>
+        </a>
+
+        <ng-container *ngIf="isCompanyAdmin$ | async">
+          <mat-divider class="nav-divider"></mat-divider>
+
+          <!-- Integrations group -->
+          <div class="nav-group">
+            <button class="nav-item nav-group-header" (click)="toggleIntegrations()"
+                    [matTooltip]="collapsed ? 'Интеграции' : ''" matTooltipPosition="right"
+                    [class.active]="integrationsExpanded">
+              <mat-icon>integration_instructions</mat-icon>
+              <span class="nav-label" *ngIf="!collapsed">Интеграции</span>
+              <mat-icon class="expand-icon" *ngIf="!collapsed">
+                {{ integrationsExpanded ? 'expand_less' : 'expand_more' }}
+              </mat-icon>
+            </button>
+            <div class="nav-subitems" *ngIf="integrationsExpanded && !collapsed">
+              <a class="nav-item nav-subitem" routerLink="/integrations/telegram-bots"
+                 routerLinkActive="active">
+                <svg class="channel-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                </svg>
+                <span class="nav-label">Telegram</span>
+              </a>
+              <a class="nav-item nav-subitem" routerLink="/integrations/vk-bots"
+                 routerLinkActive="active">
+                <svg class="channel-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.391 0 15.684 0zm3.692 17.123h-1.744c-.66 0-.862-.525-2.049-1.714-1.033-1.01-1.49-1.135-1.744-1.135-.356 0-.458.102-.458.593v1.575c0 .424-.135.678-1.253.678-1.846 0-3.896-1.12-5.339-3.202-2.17-3.049-2.763-5.339-2.763-5.814 0-.254.102-.491.593-.491h1.744c.44 0 .61.203.779.678.864 2.49 2.303 4.675 2.896 4.675.22 0 .322-.102.322-.66V9.721c-.068-1.186-.695-1.287-.695-1.71 0-.204.17-.407.44-.407h2.744c.373 0 .508.203.508.643v3.473c0 .373.17.508.271.508.22 0 .407-.135.813-.542 1.254-1.406 2.151-3.574 2.151-3.574.119-.254.305-.491.745-.491h1.744c.525 0 .644.27.525.643-.22 1.017-2.354 4.031-2.354 4.031-.187.305-.254.44 0 .78.186.254.796.779 1.203 1.253.745.847 1.32 1.558 1.473 2.049.17.474-.085.72-.576.72z"/>
+                </svg>
+                <span class="nav-label">VKontakte</span>
+              </a>
+            </div>
+          </div>
+        </ng-container>
+      </nav>
+
+      <!-- User section at bottom -->
+      <div class="sidebar-footer">
+        <mat-divider class="nav-divider"></mat-divider>
+        <div class="user-info" *ngIf="!collapsed">
+          <ng-container *ngIf="currentUser$ | async as user">
+            <div class="user-avatar">
+              <mat-icon>account_circle</mat-icon>
+            </div>
+            <div class="user-details">
+              <p class="user-name">{{ user.first_name || user.username }}</p>
+              <p class="user-role" *ngIf="currentProfile$ | async as profile">
+                {{ getRoleName(profile.role) }}
+              </p>
+            </div>
+          </ng-container>
+        </div>
+        <button class="nav-item logout-btn" (click)="logout()"
+                [matTooltip]="collapsed ? 'Выйти' : ''" matTooltipPosition="right">
+          <mat-icon>logout</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">Выйти</span>
         </button>
       </div>
-    </div>
-  </section>
+    </aside>
 
-  <main class="content">
-    <router-outlet></router-outlet>
-  </main>
+    <!-- Main content -->
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </ng-container>
 
 <ng-template #showLoginPage>
-  <main class="content login-page">
+  <main class="login-layout">
     <router-outlet></router-outlet>
   </main>
 </ng-template>
-

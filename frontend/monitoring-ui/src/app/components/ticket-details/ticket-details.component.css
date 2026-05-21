@@ -58,13 +58,66 @@ mat-card {
   border-left-color: var(--accent-orange);
 }
 
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .author {
   margin: 0;
   font-weight: 600;
 }
 
+.channel-badge {
+  display: inline-flex;
+  align-items: center;
+}
+
+.channel-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--accent-orange) !important;
+  opacity: 0.7;
+}
+
 .text {
   margin: 0.4rem 0;
+}
+
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.attachment-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--accent-orange) !important;
+}
+
+.attachment-label {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .time {

@@ -121,13 +121,23 @@ CELERY_BEAT_SCHEDULE = {
     "poll_telegram": {
         "task": "ingestion.tasks.poll_telegram",
         "schedule": 15.0,
-    }
+    },
+    "poll_vk": {
+        "task": "ingestion.tasks.poll_vk",
+        "schedule": 15.0,
+    },
 }
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_MONITOR_CHAT_ID = os.getenv("TELEGRAM_MONITOR_CHAT_ID", "")
 
 ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://elasticsearch:9200")
+
+# Ollama LLM
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "30"))
+OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "true").lower() == "true"
 
 PROMETHEUS_EXPORT_MIGRATIONS = False
 

@@ -1,7 +1,7 @@
 <div *ngIf="tickets.length === 0" class="empty-state">
   <mat-icon>inbox</mat-icon>
   <h3>Нет обращений</h3>
-  <p>Обращения появятся здесь после их создания из сообщений Telegram</p>
+  <p>Обращения появятся здесь после сообщений из Telegram или VK</p>
 </div>
 
 <table mat-table [dataSource]="tickets" class="tickets" *ngIf="tickets.length > 0">
@@ -64,8 +64,7 @@
   <tr 
     mat-row 
     *matRowDef="let row; columns: displayedColumns" 
-    (click)="select(row, $event)"
+    (click)="select(row)"
     [class.selected]="selectedTicketId === row.id">
   </tr>
 </table>
-

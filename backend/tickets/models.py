@@ -160,6 +160,7 @@ class Assignment(models.Model):
 class TicketResponse(models.Model):
     class Channel(models.TextChoices):
         TELEGRAM = "telegram", "Telegram"
+        VK = "vk", "VKontakte"
         INTERNAL = "internal", "Внутренняя"
 
     class Status(models.TextChoices):

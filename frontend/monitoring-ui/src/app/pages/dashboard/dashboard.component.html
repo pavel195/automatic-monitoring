@@ -1,50 +1,139 @@
-<!-- Минималистичная и красивая главная страница -->
 <div class="dashboard-page">
-  <!-- Hero секция с ключевыми метриками -->
+  <!-- Header -->
   <section class="hero-section">
     <div class="hero-content">
       <h1 class="hero-title">Главная</h1>
       <p class="hero-subtitle">Мониторинг обращений в реальном времени</p>
     </div>
-    
-    <!-- Основные KPI -->
-    <div class="hero-kpi" *ngIf="metrics">
+
+    <mat-card class="dashboard-state" *ngIf="loading">
+      <mat-icon>hourglass_empty</mat-icon>
+      <div>
+        <h3>Загружаем данные</h3>
+        <p>Собираем метрики и последние обращения.</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="dashboard-state dashboard-error" *ngIf="!loading && errorMessage">
+      <mat-icon>error_outline</mat-icon>
+      <div>
+        <h3>Данные не загрузились</h3>
+        <p>{{ errorMessage }}</p>
+      </div>
+      <button mat-stroked-button color="accent" (click)="loadData()">
+        <mat-icon>refresh</mat-icon>
+        Повторить
+      </button>
+    </mat-card>
+
+    <!-- KPI Row -->
+    <div class="kpi-grid" *ngIf="metrics">
       <div class="kpi-item kpi-primary">
-        <div class="kpi-icon">
-          <mat-icon>inbox</mat-icon>
-        </div>
+        <div class="kpi-icon"><mat-icon>inbox</mat-icon></div>
         <div class="kpi-content">
           <p class="kpi-label">Всего обращений</p>
           <h2 class="kpi-value">{{ metrics.total || 0 }}</h2>
           <p class="kpi-period">за 24 часа</p>
-    </div>
-    </div>
+        </div>
+      </div>
 
       <div class="kpi-item kpi-success">
-        <div class="kpi-icon">
-          <mat-icon>check_circle</mat-icon>
-    </div>
+        <div class="kpi-icon"><mat-icon>check_circle</mat-icon></div>
         <div class="kpi-content">
           <p class="kpi-label">Решено</p>
           <h2 class="kpi-value">{{ metrics.resolved || 0 }}</h2>
           <p class="kpi-period">{{ getResolvedPercentage() }}% от общего</p>
-    </div>
-    </div>
+        </div>
+      </div>
 
-      <div class="kpi-item kpi-warning" *ngIf="metrics.new_count > 0">
-        <div class="kpi-icon">
-          <mat-icon>priority_high</mat-icon>
-    </div>
+      <div class="kpi-item kpi-info">
+        <div class="kpi-icon"><mat-icon>today</mat-icon></div>
         <div class="kpi-content">
-          <p class="kpi-label">Требуют внимания</p>
-          <h2 class="kpi-value">{{ metrics.new_count }}</h2>
-          <p class="kpi-period">новых без подтверждения</p>
-    </div>
-    </div>
-    </div>
-</section>
+          <p class="kpi-label">Сегодня</p>
+          <h2 class="kpi-value">{{ metrics.tickets_today || 0 }}</h2>
+          <p class="kpi-period">за неделю: {{ metrics.tickets_this_week || 0 }}</p>
+        </div>
+      </div>
 
-  <!-- Тональность обращений -->
+      <div class="kpi-item" [class.kpi-danger]="metrics.sla_breached_count > 0" [class.kpi-muted]="!metrics.sla_breached_count">
+        <div class="kpi-icon" [class.pulse]="metrics.sla_breached_count > 0">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <p class="kpi-label">SLA нарушено</p>
+          <h2 class="kpi-value">{{ metrics.sla_breached_count || 0 }}</h2>
+          <p class="kpi-period">требуют внимания</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLA + Flow Row -->
+  <section class="metrics-row" *ngIf="metrics">
+    <!-- SLA Metrics -->
+    <mat-card class="metric-card">
+      <div class="card-header">
+        <h3>Метрики SLA</h3>
+      </div>
+      <div class="sla-grid">
+        <div class="sla-item">
+          <mat-icon>schedule</mat-icon>
+          <div>
+            <p class="sla-label">MTTA</p>
+            <p class="sla-value">{{ formatMtta() }}</p>
+            <p class="sla-desc">среднее до подтверждения</p>
+          </div>
+        </div>
+        <div class="sla-item">
+          <mat-icon>timer</mat-icon>
+          <div>
+            <p class="sla-label">MTTR</p>
+            <p class="sla-value">{{ formatMttr() }}</p>
+            <p class="sla-desc">среднее до решения</p>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Ticket Flow -->
+    <mat-card class="metric-card">
+      <div class="card-header">
+        <h3>Поток обращений</h3>
+      </div>
+      <div class="flow-widget">
+        <div class="flow-step">
+          <div class="flow-count flow-new">{{ metrics.new_count || 0 }}</div>
+          <p class="flow-label">Новые</p>
+        </div>
+        <mat-icon class="flow-arrow">arrow_forward</mat-icon>
+        <div class="flow-step">
+          <div class="flow-count flow-progress">{{ metrics.in_progress_count || 0 }}</div>
+          <p class="flow-label">В работе</p>
+        </div>
+        <mat-icon class="flow-arrow">arrow_forward</mat-icon>
+        <div class="flow-step">
+          <div class="flow-count flow-resolved">{{ metrics.resolved || 0 }}</div>
+          <p class="flow-label">Решено</p>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Channel Distribution -->
+    <mat-card class="metric-card" *ngIf="metrics.channel_breakdown?.length">
+      <div class="card-header">
+        <h3>Каналы</h3>
+      </div>
+      <div class="channel-list">
+        <div class="channel-item" *ngFor="let ch of metrics.channel_breakdown">
+          <mat-icon>{{ getChannelIcon(ch.channel) }}</mat-icon>
+          <span class="channel-name">{{ getChannelName(ch.channel) }}</span>
+          <span class="channel-count">{{ ch.total }}</span>
+        </div>
+      </div>
+    </mat-card>
+  </section>
+
+  <!-- Sentiment -->
   <section class="sentiment-section" *ngIf="sentimentStats.length">
     <mat-card class="sentiment-card">
       <div class="card-header">
@@ -52,10 +141,8 @@
         <p class="card-subtitle">Распределение по настроению клиентов</p>
       </div>
       <div class="sentiment-grid">
-        <div 
-          class="sentiment-item" 
-    *ngFor="let stat of sentimentStats"
-          [style.border-left-color]="stat.color">
+        <div class="sentiment-item" *ngFor="let stat of sentimentStats"
+             [style.border-left-color]="stat.color">
           <div class="sentiment-icon" [style.background-color]="stat.color + '20'">
             <mat-icon>{{ getSentimentIcon(stat.label) }}</mat-icon>
           </div>
@@ -65,32 +152,49 @@
           </div>
         </div>
       </div>
-  </mat-card>
-</section>
+    </mat-card>
+  </section>
 
-  <!-- Последние обращения -->
-  <section class="latest-section" *ngIf="latestTickets.length">
-    <mat-card class="latest-card">
-    <div class="card-header">
+  <!-- Recent Activity + Latest Tickets -->
+  <section class="bottom-row">
+    <!-- Recent Activity -->
+    <mat-card class="activity-card" *ngIf="metrics?.recent_activity?.length">
+      <div class="card-header">
+        <h3>Последняя активность</h3>
+      </div>
+      <div class="activity-feed">
+        <div class="activity-item" *ngFor="let item of metrics.recent_activity">
+          <div class="activity-dot" [class]="'dot-' + item.status"></div>
+          <div class="activity-content">
+            <p class="activity-title">{{ item.title }}</p>
+            <div class="activity-meta">
+              <span class="activity-status">{{ statusLabel(item.status) }}</span>
+              <span class="activity-time">{{ relativeTime(item.updated_at) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Latest Tickets -->
+    <mat-card class="latest-card" *ngIf="latestTickets.length">
+      <div class="card-header">
         <div>
           <h3>Последние обращения</h3>
           <p class="card-subtitle">Недавно поступившие запросы</p>
         </div>
         <button mat-stroked-button color="accent" routerLink="/tickets">
           <mat-icon>arrow_forward</mat-icon>
-          Все обращения
+          Все
         </button>
       </div>
       <div class="tickets-list">
-        <div 
-          class="ticket-item" 
-          *ngFor="let ticket of latestTickets"
-          (click)="navigateToTickets()">
+        <div class="ticket-item" *ngFor="let ticket of latestTickets" (click)="navigateToTickets()">
           <div class="ticket-main">
             <div class="ticket-header">
               <h4 class="ticket-title">{{ ticket.title }}</h4>
               <span class="ticket-badge" [class]="'badge-' + ticket.sentiment">
-          {{ sentimentChip(ticket.sentiment) }}
+                {{ sentimentChip(ticket.sentiment) }}
               </span>
             </div>
             <div class="ticket-meta">
@@ -106,30 +210,7 @@
           </div>
           <mat-icon class="ticket-arrow">chevron_right</mat-icon>
         </div>
-    </div>
-  </mat-card>
-</section>
-
-  <!-- Быстрые действия -->
-  <section class="actions-section">
-    <mat-card class="actions-card">
-      <div class="card-header">
-        <h3>Быстрые действия</h3>
-    </div>
-      <div class="actions-grid">
-        <button mat-stroked-button routerLink="/tickets" class="action-btn">
-          <mat-icon>list</mat-icon>
-          <span>Все обращения</span>
-        </button>
-        <button mat-stroked-button routerLink="/analytics" class="action-btn">
-          <mat-icon>analytics</mat-icon>
-          <span>Аналитика</span>
-        </button>
-        <button mat-stroked-button routerLink="/integrations" class="action-btn">
-          <mat-icon>settings</mat-icon>
-          <span>Интеграции</span>
-    </button>
-  </div>
+      </div>
     </mat-card>
-</section>
+  </section>
 </div>

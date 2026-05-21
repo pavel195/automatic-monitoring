@@ -134,12 +134,15 @@ class AnalyticsMetricsView(APIView):
     permission_classes = [IsCompanyMember]
 
     def get(self, request):
-        """Метрики с фильтрацией по компании."""
+        """Метрики с фильтрацией по компании и периоду."""
         user = request.user
         company = None
         if hasattr(user, "profile") and user.profile.company:
             company = user.profile.company
-        return Response(aggregate_metrics(company=company))
+        period = request.query_params.get("period", "24h")
+        if period not in ("24h", "7d", "30d"):
+            period = "24h"
+        return Response(aggregate_metrics(company=company, period=period))
 
 
 class SearchView(APIView):

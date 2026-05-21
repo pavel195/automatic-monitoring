@@ -146,6 +146,8 @@ export class TicketDetailsComponent implements OnChanges {
         ),
         timestamp: message.received_at,
         status: '',
+        channel: message.channel || 'telegram',
+        attachments: (message.metadata as any)?.attachments || [],
       })) || [];
     const outbound =
       this.ticket.responses?.map((response) => ({
@@ -156,6 +158,8 @@ export class TicketDetailsComponent implements OnChanges {
         meta: this.responseStatusLabel(response.status),
         timestamp: response.created_at,
         status: response.status,
+        channel: response.channel || 'telegram',
+        attachments: [] as any[],
       })) || [];
     return [...inbound, ...outbound].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
@@ -229,6 +233,21 @@ export class TicketDetailsComponent implements OnChanges {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  getChannelIcon(channel: string): string {
+    const icons: Record<string, string> = {
+      telegram: 'send', vk: 'group', email: 'email', internal: 'forum',
+    };
+    return icons[channel] || 'chat';
+  }
+
+  getAttachmentIcon(type: string): string {
+    const icons: Record<string, string> = {
+      photo: 'image', document: 'description', video: 'videocam',
+      voice: 'mic', audio: 'audiotrack',
+    };
+    return icons[type] || 'attachment';
   }
 
   ngOnChanges(changes: SimpleChanges): void {
