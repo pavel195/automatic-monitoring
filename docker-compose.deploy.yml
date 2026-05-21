@@ -52,6 +52,17 @@ services:
     depends_on:
       - backend
 
+  celery_beat:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    working_dir: /app/backend
+    command: celery -A monolith beat -l info
+    env_file: .env
+    depends_on:
+      - backend
+
   frontend:
     build:
       context: .
