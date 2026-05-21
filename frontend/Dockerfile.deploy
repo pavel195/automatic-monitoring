@@ -1,0 +1,21 @@
+FROM node:20-alpine AS build
+
+WORKDIR /app/frontend
+
+COPY frontend/monitoring-ui/package*.json ./
+RUN npm install
+
+COPY frontend/monitoring-ui .
+RUN npm run build -- --configuration production
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN npm install -g serve@14.2.4
+
+COPY --from=build /app/frontend/dist/monitoring-ui ./dist
+
+EXPOSE 4200
+
+CMD ["serve", "-s", "dist", "-l", "4200"]

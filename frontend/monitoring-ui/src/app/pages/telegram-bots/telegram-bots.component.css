@@ -77,6 +77,11 @@ mat-card-subtitle {
   margin-bottom: 1rem;
 }
 
+.ids-field {
+  display: block;
+  margin-top: 1rem;
+}
+
 .error-message {
   display: flex;
   align-items: center;
@@ -170,6 +175,14 @@ mat-card-subtitle {
   color: var(--text-primary) !important;
 }
 
+.chat-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -239,4 +252,3 @@ mat-card-subtitle {
 .bots-table button:hover mat-icon {
   color: var(--accent-orange) !important;
 }
-

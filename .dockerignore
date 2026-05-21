@@ -1,0 +1,6 @@
+.env
+.git
+**/__pycache__
+**/.pytest_cache
+frontend/monitoring-ui/dist
+frontend/monitoring-ui/node_modules

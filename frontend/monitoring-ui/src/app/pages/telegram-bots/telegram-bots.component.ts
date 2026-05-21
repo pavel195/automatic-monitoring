@@ -36,7 +36,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class TelegramBotsComponent implements OnInit {
   bots: TelegramBot[] = [];
-  displayedColumns: string[] = ['bot_username', 'status', 'allow_direct', 'actions'];
+  displayedColumns: string[] = ['bot_username', 'status', 'allow_direct', 'chats', 'actions'];
   loading = false;
   showForm = false;
   editingBot: TelegramBot | null = null;
@@ -44,6 +44,8 @@ export class TelegramBotsComponent implements OnInit {
   // Форма
   botToken = '';
   allowDirect = false;
+  chatIdsText = '';
+  discussionChatIdsText = '';
   showToken = false;
   error = '';
   fieldErrors: { [key: string]: string[] } = {};
@@ -83,6 +85,8 @@ export class TelegramBotsComponent implements OnInit {
     this.editingBot = bot;
     this.botToken = bot.bot_token || '';
     this.allowDirect = bot.allow_direct || false;
+    this.chatIdsText = this.formatIds(bot.chat_ids);
+    this.discussionChatIdsText = this.formatIds(bot.discussion_chat_ids);
     this.error = '';
     this.fieldErrors = {};
     this.showForm = true;
@@ -96,6 +100,8 @@ export class TelegramBotsComponent implements OnInit {
   resetForm(): void {
     this.botToken = '';
     this.allowDirect = false;
+    this.chatIdsText = '';
+    this.discussionChatIdsText = '';
     this.error = '';
     this.fieldErrors = {};
   }
@@ -111,8 +117,8 @@ export class TelegramBotsComponent implements OnInit {
 
     const botData: Partial<TelegramBot> = {
       bot_token: this.botToken.trim(),
-      chat_ids: [],
-      discussion_chat_ids: [],
+      chat_ids: this.parseIds(this.chatIdsText),
+      discussion_chat_ids: this.parseIds(this.discussionChatIdsText),
       allow_direct: this.allowDirect,
     };
 
@@ -230,5 +236,15 @@ export class TelegramBotsComponent implements OnInit {
   isCompanyAdmin(): boolean {
     return this.authService.isCompanyAdmin() || this.authService.isSuperAdmin();
   }
-}
 
+  private parseIds(value: string): string[] {
+    return value
+      .split(/[\s,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  private formatIds(ids: string[] | undefined): string {
+    return (ids || []).join(', ');
+  }
+}

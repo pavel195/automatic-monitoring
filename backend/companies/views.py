@@ -126,7 +126,7 @@ class TelegramBotViewSet(viewsets.ModelViewSet):
         import logging
         logger = logging.getLogger(__name__)
         
-        logger.info(f"Создание бота. Данные: {request.data}")
+        logger.info("Создание Telegram бота: поля=%s", sorted(request.data.keys()))
         logger.info(f"Пользователь: {request.user}, компания: {getattr(request.user.profile, 'company', None) if hasattr(request.user, 'profile') else None}")
         
         serializer = self.get_serializer(data=request.data)

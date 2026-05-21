@@ -1,6 +1,7 @@
 """Тесты для работы с Telegram ботами."""
 
 import pytest
+import requests
 from unittest.mock import patch, Mock
 
 from companies.models import Company, TelegramBot, UserProfile
@@ -159,3 +160,62 @@ def test_operator_cannot_create_vk_bot(operator):
     )
 
     assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@patch("companies.serializers.requests.get")
+def test_telegram_bot_create_logs_do_not_include_token(mock_get, company_admin, caplog):
+    """Токен Telegram не должен попадать в логи при создании интеграции."""
+    from rest_framework.test import APIClient
+
+    token = "123456:SECRET-TOKEN"
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "ok": True,
+        "result": {"id": 123456, "is_bot": True, "username": "safe_bot"},
+    }
+    mock_get.return_value = mock_response
+
+    client = APIClient()
+    client.force_authenticate(user=company_admin)
+
+    with caplog.at_level("INFO", logger="companies.views"):
+        response = client.post(
+            "/api/companies/bots/",
+            {
+                "bot_token": token,
+                "chat_ids": ["-1001234567890"],
+                "allow_direct": True,
+            },
+        )
+
+    assert response.status_code == 201
+    assert token not in caplog.text
+
+
+@pytest.mark.django_db
+@patch("companies.serializers.requests.get")
+def test_telegram_token_request_error_does_not_return_token(mock_get, company_admin):
+    """Ошибки проверки Telegram не должны возвращать токен в ответе API."""
+    from rest_framework.test import APIClient
+
+    token = "123456:SECRET-TOKEN"
+    mock_get.side_effect = requests.RequestException(
+        f"GET https://api.telegram.org/bot{token}/getMe failed"
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=company_admin)
+
+    response = client.post(
+        "/api/companies/bots/",
+        {
+            "bot_token": token,
+            "chat_ids": [],
+            "allow_direct": True,
+        },
+    )
+
+    assert response.status_code == 400
+    assert token not in str(response.data)

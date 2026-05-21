@@ -1,4 +1,5 @@
 import logging
+import re
 
 import requests
 from rest_framework import serializers
@@ -6,6 +7,10 @@ from rest_framework import serializers
 from companies.models import Company, TelegramBot, UserProfile, VkBot
 
 logger = logging.getLogger(__name__)
+
+
+def _hide_telegram_token(value: str) -> str:
+    return re.sub(r"/bot[^/\s]+", "/bot***", value)
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -166,8 +171,9 @@ class TelegramBotSerializer(serializers.ModelSerializer):
             logger.error("Таймаут при проверке токена бота")
             raise serializers.ValidationError("Таймаут при проверке токена бота. Проверьте подключение к интернету.")
         except requests.RequestException as e:
-            logger.error(f"Ошибка при проверке токена бота: {str(e)}")
-            raise serializers.ValidationError(f"Не удалось проверить токен бота: {str(e)}")
+            safe_error = _hide_telegram_token(str(e))
+            logger.error("Ошибка при проверке токена бота: %s", safe_error)
+            raise serializers.ValidationError(f"Не удалось проверить токен бота: {safe_error}")
 
     def create(self, validated_data):
         """Создание бота с валидацией."""
