@@ -1,3 +1,7 @@
+import logging
+
+import requests
+
 from ingestion.connectors.telegram_client import TelegramConnector
 
 
@@ -43,3 +47,22 @@ def test_telegram_connector_uses_zero_offset_when_redis_unavailable(monkeypatch)
     connector = TelegramConnector(bot_token="token")
 
     assert connector._offset == 0
+
+
+def test_telegram_connector_redacts_token_from_request_errors(monkeypatch, caplog):
+    token = "123456:test-secret-token"
+    monkeypatch.setattr(TelegramConnector, "_init_state_store", lambda self: None)
+
+    def raise_connection_error(*args, **kwargs):
+        raise requests.exceptions.ConnectionError(
+            f"https://api.telegram.org/bot{token}/getUpdates is unreachable"
+        )
+
+    monkeypatch.setattr(requests, "get", raise_connection_error)
+
+    connector = TelegramConnector(bot_token=token)
+    with caplog.at_level(logging.WARNING):
+        assert connector.poll() == []
+
+    assert token not in caplog.text
+    assert "[redacted]" in caplog.text

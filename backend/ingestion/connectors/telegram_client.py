@@ -82,10 +82,16 @@ class TelegramConnector(BaseConnector):
             logger.error("Telegram API HTTP ошибка %s: %s", status_code, response_text)
             raise
         except requests.exceptions.RequestException as e:
-            logger.warning("Ошибка сети при запросе к Telegram API: %s", e)
+            logger.warning(
+                "Ошибка сети при запросе к Telegram API: %s",
+                self._redact_token(str(e)),
+            )
             return []
         except Exception as e:
-            logger.error("Неожиданная ошибка при запросе к Telegram API: %s", e)
+            logger.error(
+                "Неожиданная ошибка при запросе к Telegram API: %s",
+                self._redact_token(str(e)),
+            )
             raise
 
         payload = response.json()
@@ -212,6 +218,11 @@ class TelegramConnector(BaseConnector):
             self.redis.set(self.offset_key, self._offset)
         except Exception as exc:  # pragma: no cover
             logger.warning("Не удалось сохранить offset Telegram: %s", exc)
+
+    def _redact_token(self, message: str) -> str:
+        if not self.token:
+            return message
+        return message.replace(self.token, "[redacted]")
 
     def _should_accept_chat(self, chat_id: str, is_private: bool) -> bool:
         if is_private:
