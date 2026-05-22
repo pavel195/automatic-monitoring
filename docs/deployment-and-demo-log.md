@@ -113,6 +113,15 @@
 - Из левого меню убрана группа интеграций, чтобы рабочее меню осталось
   коротким: главная, обращения, аналитика.
 
+## Скриншоты интерфейса
+
+Актуальные скриншоты сделаны с домена `https://chipkineev.ru` после rollout:
+
+- [Главная панель](screenshots/dashboard.png)
+- [Список обращений](screenshots/tickets-list.png)
+- [Модальное окно обращения](screenshots/ticket-modal.png)
+- [Аналитика с фильтром дат](screenshots/analytics.png)
+
 ## CI/CD
 
 - Workflow `.github/workflows/ci-cd.yml` запускается для pull request, push в
