@@ -1,34 +1,32 @@
-<!-- Профессиональная аналитическая панель для бизнеса -->
 <div class="analytics-page">
-  <!-- Заголовок с фильтрами времени -->
   <div class="page-header">
     <div>
       <h1>Аналитика и отчёты</h1>
       <p class="page-subtitle">Детальный анализ обращений и производительности</p>
     </div>
-    <div class="time-filters">
-      <button 
-        mat-stroked-button 
-        [class.active]="selectedPeriod === '24h'"
-        (click)="selectPeriod('24h')">
-        <mat-icon>schedule</mat-icon>
-        24 часа
+    <form class="date-filter" (ngSubmit)="applyDateRange()">
+      <label>
+        <span>От</span>
+        <input
+          type="date"
+          name="dateFrom"
+          [(ngModel)]="dateFrom"
+          [max]="dateTo || maxDate">
+      </label>
+      <label>
+        <span>До</span>
+        <input
+          type="date"
+          name="dateTo"
+          [(ngModel)]="dateTo"
+          [min]="dateFrom"
+          [max]="maxDate">
+      </label>
+      <button mat-stroked-button type="submit" [disabled]="isDateRangeInvalid()">
+        <mat-icon>filter_alt</mat-icon>
+        Применить
       </button>
-      <button 
-        mat-stroked-button 
-        [class.active]="selectedPeriod === '7d'"
-        (click)="selectPeriod('7d')">
-        <mat-icon>calendar_today</mat-icon>
-        7 дней
-      </button>
-      <button 
-        mat-stroked-button 
-        [class.active]="selectedPeriod === '30d'"
-        (click)="selectPeriod('30d')">
-        <mat-icon>date_range</mat-icon>
-        30 дней
-      </button>
-    </div>
+    </form>
   </div>
 
   <!-- KPI метрики -->
@@ -119,7 +117,7 @@
       <div class="card-header">
         <div>
           <h3>Динамика обращений</h3>
-          <p class="card-subtitle">Количество обращений за {{ selectedPeriod === '24h' ? 'последние 24 часа' : selectedPeriod === '7d' ? 'последние 7 дней' : 'последние 30 дней' }}</p>
+          <p class="card-subtitle">Количество обращений за {{ getDateRangeLabel() }}</p>
         </div>
       </div>
       <div class="chart-container-wide">

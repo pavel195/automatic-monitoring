@@ -64,9 +64,11 @@ export class ApiService {
     return this.http.post<TicketResponse>(`${this.base}/tickets/${id}/respond/`, { body });
   }
 
-  getMetrics(period?: string): Observable<any> {
+  getMetrics(filters?: { period?: string; dateFrom?: string; dateTo?: string }): Observable<any> {
     const params: Record<string, string> = {};
-    if (period) params['period'] = period;
+    if (filters?.period) params['period'] = filters.period;
+    if (filters?.dateFrom) params['date_from'] = filters.dateFrom;
+    if (filters?.dateTo) params['date_to'] = filters.dateTo;
     return this.http.get(`${this.base}/analytics/metrics/`, { params });
   }
 
@@ -74,4 +76,3 @@ export class ApiService {
     return this.http.get(`${this.base}/search`, { params: { q: query } });
   }
 }
-

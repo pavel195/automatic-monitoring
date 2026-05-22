@@ -105,3 +105,56 @@ def test_repeated_complaints_increase_priority():
     # Повторные жалобы должны повысить приоритет
     assert ticket.priority >= Ticket.Priority.HIGH
 
+
+@pytest.mark.django_db
+def test_new_message_from_same_vk_author_joins_open_ticket():
+    first = ChannelMessage.objects.create(
+        external_id="vk_10_1",
+        channel=ChannelMessage.Channel.VK,
+        author="vk-user-10",
+        payload="Автобус снова задерживается",
+        received_at=timezone.now(),
+    )
+    followup = ChannelMessage.objects.create(
+        external_id="vk_10_2",
+        channel=ChannelMessage.Channel.VK,
+        author="vk-user-10",
+        payload="Жду уже пятнадцать минут",
+        received_at=timezone.now() + timedelta(minutes=1),
+    )
+
+    classify_message(str(first.id))
+    classify_message(str(followup.id))
+
+    first.refresh_from_db()
+    followup.refresh_from_db()
+
+    assert first.ticket_id == followup.ticket_id
+    assert Ticket.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_message_from_other_channel_creates_separate_ticket():
+    vk_message = ChannelMessage.objects.create(
+        external_id="vk_11_1",
+        channel=ChannelMessage.Channel.VK,
+        author="shared-author",
+        payload="Проблема в группе VK",
+        received_at=timezone.now(),
+    )
+    telegram_message = ChannelMessage.objects.create(
+        external_id="tg_11_1",
+        channel=ChannelMessage.Channel.TELEGRAM,
+        author="shared-author",
+        payload="Проблема в Telegram",
+        received_at=timezone.now() + timedelta(minutes=1),
+    )
+
+    classify_message(str(vk_message.id))
+    classify_message(str(telegram_message.id))
+
+    vk_message.refresh_from_db()
+    telegram_message.refresh_from_db()
+
+    assert vk_message.ticket_id != telegram_message.ticket_id
+    assert Ticket.objects.count() == 2

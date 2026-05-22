@@ -10,14 +10,14 @@ from django.utils import timezone
 from tickets.models import ChannelMessage, Ticket
 
 
-def aggregate_metrics(company=None, period="24h"):
+def aggregate_metrics(company=None, period="24h", start=None, end=None):
     """Агрегация метрик с опциональной фильтрацией по компании и периоду."""
     now = timezone.now()
-    period_map = {"24h": 1, "7d": 7, "30d": 30}
-    days = period_map.get(period, 1)
-    start = now - timedelta(days=days)
+    start, end = _resolve_range(now, period, start, end)
 
     queryset = Ticket.objects.filter(created_at__gte=start)
+    if end:
+        queryset = queryset.filter(created_at__lte=end)
     if company:
         queryset = queryset.filter(company=company)
     resolved = queryset.exclude(resolved_at__isnull=True)
@@ -60,6 +60,8 @@ def aggregate_metrics(company=None, period="24h"):
     )
 
     channel_queryset = ChannelMessage.objects.filter(received_at__gte=start)
+    if end:
+        channel_queryset = channel_queryset.filter(received_at__lte=end)
     if company:
         channel_queryset = channel_queryset.filter(company=company)
     channel_breakdown = (
@@ -102,7 +104,12 @@ def aggregate_metrics(company=None, period="24h"):
     )
 
     # Time series
-    time_series = aggregate_time_series(company=company, period=period)
+    time_series = aggregate_time_series(
+        company=company,
+        period=period,
+        start=start,
+        end=end,
+    )
 
     return {
         "total": total,
@@ -130,22 +137,18 @@ def aggregate_metrics(company=None, period="24h"):
     }
 
 
-def aggregate_time_series(company=None, period="24h"):
+def aggregate_time_series(company=None, period="24h", start=None, end=None):
     """Генерация данных временных рядов для графиков."""
     now = timezone.now()
-    period_map = {"24h": 1, "7d": 7, "30d": 30}
-    days = period_map.get(period, 1)
-    start = now - timedelta(days=days)
+    start, end = _resolve_range(now, period, start, end)
 
     queryset = Ticket.objects.filter(created_at__gte=start)
+    if end:
+        queryset = queryset.filter(created_at__lte=end)
     if company:
         queryset = queryset.filter(company=company)
 
-    # Use hourly for 24h, daily for 7d/30d
-    if period == "24h":
-        trunc_fn = TruncHour
-    else:
-        trunc_fn = TruncDay
+    trunc_fn = TruncHour if period == "24h" and not end else TruncDay
 
     data = (
         queryset.annotate(period=trunc_fn("created_at"))
@@ -158,3 +161,10 @@ def aggregate_time_series(company=None, period="24h"):
         {"timestamp": item["period"].isoformat(), "count": item["count"]}
         for item in data
     ]
+
+
+def _resolve_range(now, period, start, end):
+    period_map = {"24h": 1, "7d": 7, "30d": 30}
+    if start:
+        return start, end
+    return now - timedelta(days=period_map.get(period, 1)), None

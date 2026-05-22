@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 
 ACK_SLA_MINUTES = {1: 60, 2: 30, 3: 15, 4: 5}
 RESOLVE_SLA_MINUTES = {1: 1440, 2: 720, 3: 240, 4: 60}
+OPEN_TICKET_STATUSES = (
+    Ticket.Status.NEW,
+    Ticket.Status.ACK,
+    Ticket.Status.IN_PROGRESS,
+)
 hybrid_classifier = HybridClassifier()
 
 
@@ -62,18 +67,46 @@ def classify_message(message_id: str):
         minutes=RESOLVE_SLA_MINUTES[result.priority]
     )
 
-    ticket = Ticket.objects.create(
-        title=result.title,
-        category=result.category,
-        priority=result.priority,
-        assigned_group=result.group,
-        ack_deadline=ack_deadline,
-        resolve_deadline=resolve_deadline,
-        sentiment=sentiment,
-        is_transport=is_transport,
-        transport_mode=transport_mode or TransportMode.OTHER,
-        company=message.company,
-    )
+    ticket = None
+    if message.author:
+        ticket = (
+            Ticket.objects.filter(
+                company=message.company,
+                status__in=OPEN_TICKET_STATUSES,
+                messages__author=message.author,
+                messages__channel=message.channel,
+            )
+            .order_by("-updated_at")
+            .first()
+        )
+
+    if ticket is None:
+        ticket = Ticket.objects.create(
+            title=result.title,
+            category=result.category,
+            priority=result.priority,
+            assigned_group=result.group,
+            ack_deadline=ack_deadline,
+            resolve_deadline=resolve_deadline,
+            sentiment=sentiment,
+            is_transport=is_transport,
+            transport_mode=transport_mode or TransportMode.OTHER,
+            company=message.company,
+        )
+        logger.info(
+            "Создан тикет %s для сообщения %s (classifier: %s)",
+            ticket.id,
+            message_id,
+            source,
+        )
+    else:
+        logger.info(
+            "Сообщение %s добавлено в тикет %s (classifier: %s)",
+            message_id,
+            ticket.id,
+            source,
+        )
+
     index_ticket(ticket)
     message.ticket = ticket
     message.is_transport = is_transport
@@ -82,7 +115,6 @@ def classify_message(message_id: str):
     message.save(
         update_fields=["ticket", "is_transport", "sentiment", "transport_mode"]
     )
-    logger.info("Создан тикет %s для сообщения %s (classifier: %s)", ticket.id, message_id, source)
     return str(ticket.id)
 
 

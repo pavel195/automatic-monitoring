@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +12,7 @@ import { ApiService } from '../../services/api.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatIconModule,
     MatButtonModule,
@@ -21,7 +23,9 @@ import { ApiService } from '../../services/api.service';
 })
 export class AnalyticsComponent implements OnInit {
   metrics: any = null;
-  selectedPeriod: '24h' | '7d' | '30d' = '24h';
+  readonly maxDate = this.formatDateInput(new Date());
+  dateFrom = this.daysBeforeToday(6);
+  dateTo = this.maxDate;
   
   // Данные для графиков
   statusData: { name: string; value: number }[] = [];
@@ -92,16 +96,29 @@ export class AnalyticsComponent implements OnInit {
     this.loadMetrics();
   }
 
-  selectPeriod(period: '24h' | '7d' | '30d'): void {
-    this.selectedPeriod = period;
+  applyDateRange(): void {
+    if (this.isDateRangeInvalid()) {
+      return;
+    }
     this.loadMetrics();
   }
 
   loadMetrics(): void {
-    this.api.getMetrics(this.selectedPeriod).subscribe((metrics) => {
+    this.api.getMetrics({
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
+    }).subscribe((metrics) => {
       this.metrics = metrics;
       this.processMetrics(metrics);
     });
+  }
+
+  isDateRangeInvalid(): boolean {
+    return !this.dateFrom || !this.dateTo || this.dateFrom > this.dateTo;
+  }
+
+  getDateRangeLabel(): string {
+    return `${this.formatDateLabel(this.dateFrom)} - ${this.formatDateLabel(this.dateTo)}`;
   }
 
   private processMetrics(metrics: any): void {
@@ -166,9 +183,7 @@ export class AnalyticsComponent implements OnInit {
         name: 'Обращения',
         series: metrics.time_series.map((item: any) => {
           const date = new Date(item.timestamp);
-          const label = this.selectedPeriod === '24h'
-            ? `${date.getHours()}:00`
-            : `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+          const label = `${date.getDate()}.${(date.getMonth() + 1).toString().padStart(2, '0')}`;
           return { name: label, value: item.count };
         }),
       }];
@@ -227,6 +242,26 @@ export class AnalyticsComponent implements OnInit {
   getNewPercentage(): number {
     if (!this.metrics?.total) return 0;
     return Math.round((this.metrics.new_count / this.metrics.total) * 100);
+  }
+
+  private daysBeforeToday(days: number): string {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return this.formatDateInput(date);
+  }
+
+  private formatDateInput(date: Date): string {
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  private formatDateLabel(value: string): string {
+    if (!value) {
+      return '';
+    }
+    const [year, month, day] = value.split('-');
+    return `${day}.${month}.${year}`;
   }
 
   // Иконки и цвета

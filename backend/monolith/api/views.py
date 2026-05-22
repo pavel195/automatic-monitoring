@@ -1,4 +1,7 @@
+from datetime import datetime, time
+
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -142,7 +145,23 @@ class AnalyticsMetricsView(APIView):
         period = request.query_params.get("period", "24h")
         if period not in ("24h", "7d", "30d"):
             period = "24h"
-        return Response(aggregate_metrics(company=company, period=period))
+        start = self._parse_bound(request.query_params.get("date_from"), time.min)
+        end = self._parse_bound(request.query_params.get("date_to"), time.max)
+        if start and end and start > end:
+            start = end = None
+        return Response(
+            aggregate_metrics(company=company, period=period, start=start, end=end)
+        )
+
+    @staticmethod
+    def _parse_bound(value, bound_time):
+        date_value = parse_date(value) if value else None
+        if not date_value:
+            return None
+        return timezone.make_aware(
+            datetime.combine(date_value, bound_time),
+            timezone.get_current_timezone(),
+        )
 
 
 class SearchView(APIView):
@@ -183,4 +202,3 @@ class TicketResponseViewSet(viewsets.ReadOnlyModelViewSet):
                 return queryset.filter(ticket__company=profile.company)
 
         return queryset.none()
-
