@@ -49,7 +49,6 @@ def operator(company):
 def test_telegram_bot_token_validation(mock_get, company_admin, company):
     """Тест валидации токена Telegram бота."""
     from rest_framework.test import APIClient
-    from companies.serializers import TelegramBotSerializer
 
     # Мокаем успешный ответ от Telegram API
     mock_response = Mock()

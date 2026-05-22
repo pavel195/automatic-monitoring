@@ -3,7 +3,12 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <!-- Logo -->
-      <div class="sidebar-header" (click)="toggleSidebar()">
+      <div
+        class="sidebar-header"
+        tabindex="0"
+        (click)="toggleSidebar()"
+        (keydown.enter)="toggleSidebar()"
+        (keydown.space)="toggleSidebar()">
         <div class="logo-icon">
           <mat-icon>hub</mat-icon>
         </div>

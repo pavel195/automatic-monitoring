@@ -145,7 +145,7 @@ class TelegramBotSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Токен бота не может быть пустым.")
 
         try:
-            logger.info(f"Проверка токена бота через Telegram API...")
+            logger.info("Проверка токена бота через Telegram API...")
             response = requests.get(
                 f"https://api.telegram.org/bot{value.strip()}/getMe", timeout=10
             )

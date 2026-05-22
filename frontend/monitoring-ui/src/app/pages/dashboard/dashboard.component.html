@@ -189,7 +189,13 @@
         </button>
       </div>
       <div class="tickets-list">
-        <div class="ticket-item" *ngFor="let ticket of latestTickets" (click)="navigateToTickets()">
+        <div
+          class="ticket-item"
+          *ngFor="let ticket of latestTickets"
+          tabindex="0"
+          (click)="navigateToTickets()"
+          (keydown.enter)="navigateToTickets()"
+          (keydown.space)="navigateToTickets()">
           <div class="ticket-main">
             <div class="ticket-header">
               <h4 class="ticket-title">{{ ticket.title }}</h4>

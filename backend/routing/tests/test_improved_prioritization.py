@@ -1,11 +1,11 @@
 """Тесты для улучшенной логики приоритизации."""
 
 import pytest
-from datetime import datetime, timedelta, timezone as tz
+from datetime import timedelta
 from django.utils import timezone
 
 from routing.tasks import classify_message
-from tickets.models import ChannelMessage, Ticket, Sentiment, TransportMode
+from tickets.models import ChannelMessage, Ticket, Sentiment
 
 
 @pytest.mark.django_db

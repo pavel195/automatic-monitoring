@@ -114,8 +114,6 @@ export class RegisterComponent {
               this.fieldErrors[key] = value;
             } else if (typeof value === 'string') {
               this.fieldErrors[key] = [value];
-            } else if (value && typeof value === 'object' && Array.isArray(value)) {
-              this.fieldErrors[key] = value;
             }
           }
           
@@ -150,4 +148,3 @@ export class RegisterComponent {
     return !!this.fieldErrors[fieldName] && this.fieldErrors[fieldName].length > 0;
   }
 }
-

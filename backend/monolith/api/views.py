@@ -2,7 +2,7 @@ from datetime import datetime, time
 
 from django.utils import timezone
 from django.utils.dateparse import parse_date
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView

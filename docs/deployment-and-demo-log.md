@@ -103,8 +103,30 @@
   `до`; конечная дата ограничена текущим днём.
 - Для отчётной проверки подготовлены backend-сценарии на объединение сообщений
   и на включение последней даты диапазона в метрики.
-- Демонстрационные обращения VK и Telegram добавляются отдельно на серверном
-  стенде после rollout, без записи токенов и паролей в репозиторий.
+- После rollout на серверный стенд добавлены четыре демонстрационных обращения
+  и десять сообщений из VK и Telegram без записи токенов и паролей в
+  репозиторий.
+
+## CI/CD
+
+- Workflow `.github/workflows/ci-cd.yml` запускается для pull request, push в
+  `main` и вручную.
+- CI проверяет backend через Ruff, frontend через ESLint, production-сборку
+  Angular и backend pytest в compose-окружении.
+- Deploy job зависит от успешного lint и backend test job.
+- Deploy собирает `linux/amd64` образы на runner, передаёт их на сервер по SSH,
+  делает fast-forward `git pull` в `/home/oem/automatic-monitoring` и запускает
+  `docker-compose.deploy.yml` без серверного build.
+- Такой rollout не зависит от исходящего доступа сервера к Docker Hub, который
+  на стенде уже блокировал сборку базовых образов.
+
+Для включения автоматического server deploy в GitHub нужны:
+
+1. repository variable `ENABLE_SERVER_DEPLOY=true`;
+2. secret `DEPLOY_SSH_PRIVATE_KEY` с приватным ключом пользователя deploy;
+3. secret `DEPLOY_KNOWN_HOSTS` со строкой host key сервера.
+
+Публичный ключ deploy должен быть добавлен на сервер для пользователя `oem`.
 
 ## Договорённый workflow изменений
 
