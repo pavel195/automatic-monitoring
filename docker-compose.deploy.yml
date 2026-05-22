@@ -40,6 +40,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      default:
+      nginx-proxy:
+        aliases:
+          - automatic-monitoring-backend
 
   celery_worker:
     build:
@@ -68,10 +73,22 @@ services:
       context: .
       dockerfile: frontend/Dockerfile.deploy
     restart: unless-stopped
+    environment:
+      VIRTUAL_HOST: chipkineev.ru
+      VIRTUAL_PORT: 4200
+      LETSENCRYPT_HOST: chipkineev.ru
+      LETSENCRYPT_EMAIL: alex@chipkineev.ru
     ports:
       - "4200:4200"
     depends_on:
       - backend
+    networks:
+      - default
+      - nginx-proxy
 
 volumes:
   pgdata:
+
+networks:
+  nginx-proxy:
+    external: true
