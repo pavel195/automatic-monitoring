@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TicketsBoardComponent } from '../../components/tickets-board/tickets-board.component';
 import { TicketDetailsComponent } from '../../components/ticket-details/ticket-details.component';
 import { ApiService, Ticket } from '../../services/api.service';
@@ -32,14 +33,13 @@ interface Filters {
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
+    MatDialogModule,
     TicketsBoardComponent,
-    TicketDetailsComponent,
   ],
   templateUrl: './tickets.component.html',
   styleUrls: ['./tickets.component.css'],
 })
 export class TicketsComponent implements OnInit {
-  selected?: Ticket;
   allTickets: Ticket[] = [];
   filteredTickets: Ticket[] = [];
   searchQuery: string = '';
@@ -57,7 +57,7 @@ export class TicketsComponent implements OnInit {
 
   constructor(
     private readonly api: ApiService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly dialog: MatDialog
   ) {
     // Debounce для поиска - ждем 500ms после последнего ввода
     this.searchSubject
@@ -205,12 +205,8 @@ export class TicketsComponent implements OnInit {
   }
 
   onSelect(ticket: Ticket) {
-    console.log('TicketsComponent.onSelect вызван с:', ticket);
-    
     if (!ticket) {
       console.warn('TicketsComponent: попытка выбрать пустой тикет');
-      this.selected = undefined;
-      this.cdr.detectChanges();
       return;
     }
     
@@ -218,25 +214,15 @@ export class TicketsComponent implements OnInit {
       console.warn('TicketsComponent: тикет без ID', ticket);
       return;
     }
-    
-    console.log('TicketsComponent: получен тикет', ticket.id, ticket.title);
-    
-    // Создаем новый объект для триггера изменений Angular
-    // Используем Object.assign для создания нового объекта
-    this.selected = Object.assign({}, ticket);
-    
-    // Принудительно запускаем обнаружение изменений
-    this.cdr.detectChanges();
-    
-    console.log('TicketsComponent: selected установлен', this.selected?.id, this.selected?.title);
-    
-    // Дополнительная проверка через небольшую задержку
-    setTimeout(() => {
-      if (this.selected?.id === ticket.id) {
-        console.log('TicketsComponent: selected подтвержден после задержки', this.selected.id);
-      } else {
-        console.warn('TicketsComponent: selected не совпадает!', this.selected?.id, 'ожидалось', ticket.id);
-      }
-    }, 100);
+
+    this.dialog.open(TicketDetailsComponent, {
+      data: Object.assign({}, ticket),
+      panelClass: 'ticket-details-dialog',
+      autoFocus: false,
+      restoreFocus: true,
+      width: 'min(1040px, calc(100vw - 32px))',
+      maxWidth: 'calc(100vw - 32px)',
+      maxHeight: 'calc(100vh - 32px)',
+    });
   }
 }

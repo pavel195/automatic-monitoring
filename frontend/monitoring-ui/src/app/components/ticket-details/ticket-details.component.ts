@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Inject, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { ApiService, Ticket, TicketResponse } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
 
@@ -20,12 +21,14 @@ import { WebsocketService } from '../../services/websocket.service';
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
+    MatDialogModule,
   ],
   templateUrl: './ticket-details.component.html',
   styleUrls: ['./ticket-details.component.css'],
 })
 export class TicketDetailsComponent implements OnChanges {
   @Input() ticket?: Ticket;
+  isDialog = false;
   responseBody = '';
   sending = false;
   errorMessage = '';
@@ -78,8 +81,19 @@ export class TicketDetailsComponent implements OnChanges {
 
   constructor(
     private readonly api: ApiService,
-    private readonly ws: WebsocketService
-  ) {}
+    private readonly ws: WebsocketService,
+    @Optional() @Inject(MAT_DIALOG_DATA) dialogTicket: Ticket | null,
+    @Optional() private readonly dialogRef: MatDialogRef<TicketDetailsComponent> | null
+  ) {
+    if (dialogTicket) {
+      this.ticket = dialogTicket;
+      this.isDialog = true;
+    }
+  }
+
+  closeDialog(): void {
+    this.dialogRef?.close();
+  }
 
   acknowledge() {
     if (!this.ticket) {
@@ -271,4 +285,3 @@ export class TicketDetailsComponent implements OnChanges {
     }
   }
 }
-

@@ -37,9 +37,7 @@ export class AppComponent implements OnInit, OnDestroy {
   isAuthenticated$: Observable<boolean>;
   currentUser$: Observable<any>;
   currentProfile$: Observable<any>;
-  isCompanyAdmin$: Observable<boolean>;
   collapsed = false;
-  integrationsExpanded = false;
   private readonly publicRoutes = new Set(['/login', '/register']);
   private routerSub?: Subscription;
 
@@ -55,21 +53,14 @@ export class AppComponent implements OnInit, OnDestroy {
     );
     this.currentUser$ = this.authService.currentUser$;
     this.currentProfile$ = this.authService.currentProfile$;
-    this.isCompanyAdmin$ = this.authService.currentProfile$.pipe(
-      map(profile => profile ? (this.authService.isCompanyAdmin() || this.authService.isSuperAdmin()) : false)
-    );
   }
 
   ngOnInit(): void {
     this.checkAuthOnInit();
     this.routerSub = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe((event) => {
+      .subscribe(() => {
         this.checkAuthOnNavigation();
-        const url = (event as NavigationEnd).urlAfterRedirects || (event as NavigationEnd).url;
-        if (url.startsWith('/integrations')) {
-          this.integrationsExpanded = true;
-        }
       });
   }
 
@@ -107,16 +98,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.collapsed = !this.collapsed;
-    if (this.collapsed) {
-      this.integrationsExpanded = false;
-    }
-  }
-
-  toggleIntegrations(): void {
-    if (this.collapsed) {
-      this.collapsed = false;
-    }
-    this.integrationsExpanded = !this.integrationsExpanded;
   }
 
   getRoleName(role: string): string {

@@ -114,20 +114,5 @@
         (selectTicket)="onSelect($event)">
       </app-tickets-board>
     </div>
-
-    <div class="ticket-details">
-      <app-ticket-details 
-        *ngIf="selected"
-        [ticket]="selected">
-      </app-ticket-details>
-
-      <mat-card *ngIf="!selected">
-        <div class="empty-details-content">
-          <mat-icon>info</mat-icon>
-          <h3>Выберите обращение</h3>
-          <p>Кликните на обращение в списке, чтобы просмотреть детали</p>
-        </div>
-      </mat-card>
-    </div>
   </div>
 </div>

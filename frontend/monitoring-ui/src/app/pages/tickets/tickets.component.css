@@ -149,54 +149,12 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
+  display: block;
 }
 
 .tickets-container {
   position: relative;
   min-width: 0;
-}
-
-.empty-details {
-  height: 100%;
-}
-
-.empty-details mat-card {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(71, 85, 105, 0.3);
-}
-
-.empty-details-content {
-  text-align: center;
-  padding: 3rem 2rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.empty-details-content mat-icon {
-  font-size: 64px;
-  width: 64px;
-  height: 64px;
-  color: var(--accent-orange);
-  opacity: 0.5;
-  margin-bottom: 1rem;
-}
-
-.empty-details-content h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.empty-details-content p {
-  margin: 0;
-  font-size: 0.875rem;
 }
 
 .loading-indicator {
@@ -236,7 +194,7 @@
   }
 
   .grid {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
   .filter-group {

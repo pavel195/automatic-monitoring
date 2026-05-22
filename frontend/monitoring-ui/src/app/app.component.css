@@ -143,44 +143,6 @@
   border-color: rgba(71, 85, 105, 0.3) !important;
 }
 
-/* Nav Group (Integrations) */
-.nav-group-header {
-  cursor: pointer;
-}
-
-.expand-icon {
-  font-size: 18px !important;
-  width: 18px !important;
-  height: 18px !important;
-  color: var(--text-muted) !important;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.nav-subitems {
-  padding-left: 8px;
-  margin-top: 2px;
-}
-
-.nav-subitem {
-  padding: 8px 12px 8px 16px;
-  font-size: 0.85rem;
-}
-
-.channel-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.nav-subitem:hover .channel-icon,
-.nav-subitem.active .channel-icon {
-  opacity: 1;
-  color: var(--accent-orange);
-}
-
 /* Sidebar Footer / User */
 .sidebar-footer {
   padding: 8px;

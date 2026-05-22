@@ -1,9 +1,22 @@
-<section *ngIf="ticket; else empty" class="ticket-details">
-  <mat-card>
-    <mat-card-title>{{ ticket.title }}</mat-card-title>
-    <mat-card-subtitle>
-      {{ transportLabel(ticket) }} · Приоритет {{ priorityLabel(ticket.priority) }}
-    </mat-card-subtitle>
+<section *ngIf="ticket; else empty" class="ticket-details" [class.in-dialog]="isDialog">
+  <mat-card class="summary-card">
+    <div class="details-header">
+      <div>
+        <mat-card-title>{{ ticket.title }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ transportLabel(ticket) }} · Приоритет {{ priorityLabel(ticket.priority) }}
+        </mat-card-subtitle>
+      </div>
+      <button
+        *ngIf="isDialog"
+        mat-icon-button
+        type="button"
+        class="close-button"
+        (click)="closeDialog()"
+        aria-label="Закрыть">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
     <mat-card-content class="metadata">
       <div>
         <p class="label">Статус</p>
