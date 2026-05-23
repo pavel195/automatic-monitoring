@@ -129,11 +129,18 @@
 - CI проверяет backend через Ruff, frontend через ESLint, production-сборку
   Angular и backend pytest в compose-окружении.
 - Deploy job зависит от успешного lint и backend test job.
-- Deploy собирает `linux/amd64` образы на runner, передаёт их на сервер по SSH,
+- Deploy собирает `linux/amd64` образы на runner для сервисов `backend`,
+  `frontend`, `celery_worker` и `celery_beat`, передаёт их на сервер по SSH,
   делает fast-forward `git pull` в `/home/oem/automatic-monitoring` и запускает
   `docker-compose.deploy.yml` без серверного build.
 - Такой rollout не зависит от исходящего доступа сервера к Docker Hub, который
   на стенде уже блокировал сборку базовых образов.
+- После запуска workflow проверяет результат на сервере: доступность Swagger
+  внутри backend-контейнера, доступность frontend внутри frontend-контейнера,
+  `python manage.py check` в backend-контейнере и `docker compose ps`.
+- При ошибке server validation workflow выводит `ps` и хвост логов `backend`,
+  `frontend`, `celery_worker` и `celery_beat`, чтобы причину падения было видно
+  прямо в логе GitHub Actions.
 
 Для включения автоматического server deploy в GitHub нужны:
 

@@ -11,6 +11,9 @@ concurrency:
   group: automatic-monitoring-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -71,6 +74,7 @@ jobs:
     env:
       DEPLOY_TARGET: oem@chipkineev.ru
       DEPLOY_PATH: /home/oem/automatic-monitoring
+      DEPLOY_COMPOSE_FILE: docker-compose.deploy.yml
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -110,5 +114,46 @@ jobs:
       - name: Start services
         run: |
           ssh -i ~/.ssh/deploy_key "$DEPLOY_TARGET" \
-            "docker compose -f '$DEPLOY_PATH/docker-compose.deploy.yml' up -d --no-build backend frontend celery_worker celery_beat &&
-             docker compose -f '$DEPLOY_PATH/docker-compose.deploy.yml' ps"
+            "DEPLOY_PATH='$DEPLOY_PATH' DEPLOY_COMPOSE_FILE='$DEPLOY_COMPOSE_FILE' bash -se" <<'REMOTE'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+          docker compose -f "$DEPLOY_COMPOSE_FILE" up -d --no-build \
+            postgres redis backend frontend celery_worker celery_beat
+          docker compose -f "$DEPLOY_COMPOSE_FILE" ps
+          REMOTE
+
+      - name: Validate server rollout
+        run: |
+          ssh -i ~/.ssh/deploy_key "$DEPLOY_TARGET" \
+            "DEPLOY_PATH='$DEPLOY_PATH' DEPLOY_COMPOSE_FILE='$DEPLOY_COMPOSE_FILE' bash -se" <<'REMOTE'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+
+          show_diagnostics() {
+            docker compose -f "$DEPLOY_COMPOSE_FILE" ps || true
+            docker compose -f "$DEPLOY_COMPOSE_FILE" logs --tail=120 \
+              backend frontend celery_worker celery_beat || true
+          }
+          trap show_diagnostics ERR
+
+          for attempt in {1..45}; do
+            if docker compose -f "$DEPLOY_COMPOSE_FILE" exec -T backend python - <<'PY'
+          import urllib.request
+
+          urllib.request.urlopen("http://127.0.0.1:8000/api/docs/", timeout=5).read(1)
+          PY
+            then
+              break
+            fi
+            sleep 2
+          done
+
+          docker compose -f "$DEPLOY_COMPOSE_FILE" exec -T backend python - <<'PY'
+          import urllib.request
+
+          urllib.request.urlopen("http://127.0.0.1:8000/api/docs/", timeout=5).read(1)
+          PY
+          docker compose -f "$DEPLOY_COMPOSE_FILE" exec -T frontend node -e "fetch('http://127.0.0.1:4200/').then((r) => { if (!r.ok) throw new Error(String(r.status)); })"
+          docker compose -f "$DEPLOY_COMPOSE_FILE" exec -T backend python manage.py check
+          docker compose -f "$DEPLOY_COMPOSE_FILE" ps
+          REMOTE
