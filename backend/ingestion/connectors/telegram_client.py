@@ -17,6 +17,9 @@ class TelegramConnector(BaseConnector):
     Для production лучше перейти на webhook, но для MVP достаточно поллинга.
     """
 
+    LONG_POLL_TIMEOUT = 5
+    REQUEST_TIMEOUT = (5, 20)
+
     QUICK_ACTIONS = {
         "Жалоба": ("complaint", "Опишите, что произошло и где вы столкнулись с проблемой."),
         "Инцидент": (
@@ -69,9 +72,13 @@ class TelegramConnector(BaseConnector):
             logger.warning("TELEGRAM_BOT_TOKEN не задан, коннектор выключен")
             return []
 
-        params = {"timeout": 5, "offset": self._offset}
+        params = {"timeout": self.LONG_POLL_TIMEOUT, "offset": self._offset}
         try:
-            response = requests.get(f"{self.api_url}/getUpdates", params=params, timeout=10)
+            response = requests.get(
+                f"{self.api_url}/getUpdates",
+                params=params,
+                timeout=self.REQUEST_TIMEOUT,
+            )
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code if e.response is not None else None
@@ -100,8 +107,10 @@ class TelegramConnector(BaseConnector):
             return []
 
         events = []
+        offset_advanced = False
         for update in payload.get("result", []):
             self._offset = max(self._offset, update["update_id"] + 1)
+            offset_advanced = True
             message = (
                 update.get("message")
                 or update.get("channel_post")
@@ -121,11 +130,11 @@ class TelegramConnector(BaseConnector):
             text = (message.get("text") or message.get("caption") or "").strip()
             if is_private:
                 if text.lower() in ("/start", "start"):
-                    self._send_welcome_keyboard(chat_id)
+                    self._send_service_message(self._send_welcome_keyboard, chat_id)
                     continue
                 if text in self.QUICK_ACTIONS:
                     self._remember_last_action(chat_id, text)
-                    self._send_followup(chat_id, text)
+                    self._send_service_message(self._send_followup, chat_id, text)
                     continue
 
             is_comment = chat_id in self.discussion_chat_ids
@@ -168,7 +177,7 @@ class TelegramConnector(BaseConnector):
                     "metadata": metadata,
                 }
             )
-        if events:
+        if offset_advanced:
             self._persist_offset()
         return events
 
@@ -246,6 +255,15 @@ class TelegramConnector(BaseConnector):
         )
         self._post_message(chat_id, f"✅ {action}. {prompt}")
 
+    def _send_service_message(self, sender, *args):
+        try:
+            sender(*args)
+        except requests.exceptions.RequestException as exc:
+            logger.warning(
+                "Не удалось отправить ответ Telegram: %s",
+                self._redact_token(str(exc)),
+            )
+
     def _post_message(self, chat_id: str, text: str, reply_markup=None) -> Optional[str]:
         if not self.token:
             return None
@@ -259,7 +277,7 @@ class TelegramConnector(BaseConnector):
         response = requests.post(
             f"{self.api_url}/sendMessage",
             json=payload,
-            timeout=10,
+            timeout=self.REQUEST_TIMEOUT,
         )
         response.raise_for_status()
         data = response.json()

@@ -5,6 +5,35 @@ import requests
 from ingestion.connectors.telegram_client import TelegramConnector
 
 
+class TelegramResponse:
+    def __init__(self, payload):
+        self.payload = payload
+        self.text = ""
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self.payload
+
+
+class FakeRedis:
+    def __init__(self):
+        self.store = {}
+
+    def get(self, key):
+        return self.store.get(key)
+
+    def set(self, key, value):
+        self.store[key] = value
+
+    def setex(self, key, ttl, value):
+        self.store[key] = value
+
+    def delete(self, key):
+        self.store.pop(key, None)
+
+
 def test_telegram_connector_reads_chat_ids_from_env(monkeypatch):
     monkeypatch.setenv("TELEGRAM_MONITOR_CHAT_ID", "100, 200")
     monkeypatch.setenv("TELEGRAM_DISCUSSION_CHAT_IDS", "300")
@@ -66,3 +95,49 @@ def test_telegram_connector_redacts_token_from_request_errors(monkeypatch, caplo
 
     assert token not in caplog.text
     assert "[redacted]" in caplog.text
+
+
+def test_telegram_connector_persists_offset_when_quick_action_reply_times_out(
+    monkeypatch, caplog
+):
+    redis = FakeRedis()
+    monkeypatch.setattr(
+        TelegramConnector,
+        "_init_state_store",
+        lambda self: setattr(self, "redis", redis),
+    )
+
+    def get_updates(*args, **kwargs):
+        assert kwargs["timeout"] == TelegramConnector.REQUEST_TIMEOUT
+        return TelegramResponse(
+            {
+                "ok": True,
+                "result": [
+                    {
+                        "update_id": 42,
+                        "message": {
+                            "message_id": 7,
+                            "chat": {"id": 111, "type": "private"},
+                            "from": {"username": "passenger"},
+                            "text": "Жалоба",
+                        },
+                    }
+                ],
+            }
+        )
+
+    def send_message(*args, **kwargs):
+        assert kwargs["timeout"] == TelegramConnector.REQUEST_TIMEOUT
+        raise requests.exceptions.ReadTimeout("read timed out")
+
+    monkeypatch.setattr(requests, "get", get_updates)
+    monkeypatch.setattr(requests, "post", send_message)
+
+    connector = TelegramConnector(bot_token="token", allow_private=True)
+
+    with caplog.at_level(logging.WARNING):
+        assert connector.poll() == []
+
+    assert redis.store[connector.offset_key] == 43
+    assert redis.store[connector._private_action_key("111")] == "Жалоба"
+    assert "Не удалось отправить ответ Telegram" in caplog.text

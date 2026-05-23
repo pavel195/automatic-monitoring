@@ -123,6 +123,16 @@ def poll_telegram():
                     bot.company.name if bot.company else "Unknown",
                     exc,
                 )
+        except requests.exceptions.RequestException as exc:
+            error_message = str(exc).replace(bot.bot_token, "[redacted]")
+            logger.warning(
+                "Сетевая ошибка при обработке бота %s компании %s: %s",
+                bot.bot_username,
+                bot.company.name if bot.company else "Unknown",
+                error_message,
+            )
+            bot.last_error = error_message[:500]
+            bot.save(update_fields=["last_error"])
         except Exception as exc:
             # Критические ошибки - меняем статус на ERROR
             logger.error(
