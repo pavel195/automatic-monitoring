@@ -125,6 +125,72 @@ mat-card-header,
   color: var(--text-primary) !important;
 }
 
+/* Material form controls on dark cards */
+.mat-mdc-form-field {
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  background: rgba(15, 23, 42, 0.45) !important;
+}
+
+.mat-mdc-form-field .mat-mdc-input-element,
+.mat-mdc-form-field textarea.mat-mdc-input-element,
+.mat-mdc-form-field input.mat-mdc-input-element,
+.mat-mdc-select-value,
+.mat-mdc-select-value-text {
+  color: var(--text-primary) !important;
+  caret-color: var(--accent-orange) !important;
+}
+
+.mat-mdc-form-field input::placeholder,
+.mat-mdc-form-field textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+.mat-mdc-form-field .mdc-floating-label,
+.mat-mdc-form-field .mat-mdc-floating-label,
+.mat-mdc-form-field .mat-mdc-form-field-hint,
+.mat-mdc-form-field .mat-mdc-form-field-required-marker {
+  color: var(--text-secondary) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-floating-label,
+.mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+  color: var(--orange-400) !important;
+}
+
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--accent-orange) !important;
+}
+
+.mat-mdc-select-panel {
+  background: rgba(15, 23, 42, 0.98) !important;
+}
+
+.mat-mdc-option,
+.mat-mdc-option .mdc-list-item__primary-text {
+  color: var(--text-primary) !important;
+}
+
+.mat-mdc-option:hover,
+.mat-mdc-option.mdc-list-item--selected {
+  background: rgba(249, 115, 22, 0.16) !important;
+}
+
+.mat-mdc-checkbox label {
+  color: var(--text-primary) !important;
+}
+
 /* Таблицы Material в темной теме - контрастные */
 mat-table,
 .mat-mdc-table {

@@ -1,4 +1,27 @@
 <div class="integrations-container">
+  <div class="integrations-header">
+    <div>
+      <h1>Интеграции</h1>
+      <p>Подключение каналов, из которых система получает обращения пользователей.</p>
+    </div>
+  </div>
+
+  <nav class="integration-tabs" aria-label="Каналы интеграций">
+    <a
+      routerLink="telegram-bots"
+      routerLinkActive="active"
+      class="integration-tab">
+      <mat-icon>send</mat-icon>
+      Telegram
+    </a>
+    <a
+      routerLink="vk-bots"
+      routerLinkActive="active"
+      class="integration-tab">
+      <mat-icon>group</mat-icon>
+      VK
+    </a>
+  </nav>
+
   <router-outlet></router-outlet>
 </div>
-

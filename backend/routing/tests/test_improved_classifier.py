@@ -57,6 +57,16 @@ def test_classifier_extended_keywords():
     assert result.category == "praise"
 
 
+def test_classifier_detects_transfer_praise():
+    classifier = KeywordClassifier()
+
+    result = classifier.predict("Трансфер прибыл вовремя, комфортные условия")
+
+    assert result.category == "praise"
+    assert result.priority == 1
+    assert result.group == "operations"
+
+
 def test_classifier_group_detection():
     """Тест определения групп."""
     classifier = KeywordClassifier()
@@ -68,4 +78,3 @@ def test_classifier_group_detection():
     # Группа operations
     result = classifier.predict("Водитель опоздал на маршрут")
     assert result.group == "operations"
-

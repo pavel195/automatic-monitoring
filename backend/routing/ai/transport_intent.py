@@ -43,6 +43,7 @@ class TransportIntentModel:
             "станц": 17,
             "остановк": 18,
             "платформ": 19,
+            "трансфер": 46,
             # Не транспорт
             "еда": 20,
             "магазин": 21,
@@ -82,7 +83,7 @@ class TransportIntentModel:
             "поезд", "жд", "метро", "трамвай", "автобус", "самолет",
             "маршрут", "рейс", "электричк", "ласточк", "сапсан",
             "маршрутк", "такси", "паром", "теплоход", "перрон",
-            "вокзал", "станц", "остановк", "платформ"
+            "вокзал", "станц", "остановк", "платформ", "трансфер"
         ]
         for token in transport_tokens:
             if token in self.vocab:
@@ -128,6 +129,7 @@ class TransportIntentModel:
             "паром", "теплоход", "вокзал", "станц", "остановк",
             "платформ", "транспорт", "проезд", "билет", "проездн",
             "рейсов", "маршрутн", "движен", "график", "расписан",
+            "трансфер", "трансферн", "трансферный", "шаттл",
             # Дополнительные термины
             "поездк", "поездка", "перевозк", "перевозка", "транспортировк",
             "пассажир", "пассажирск", "пассажирский", "пассажиры",
@@ -214,6 +216,8 @@ class TransportIntentModel:
             "вежлив", "вежливо", "приятн", "приятно", "комфортн", "комфортно",
             "удобн", "удобно", "чист", "чисто", "аккуратн", "аккуратно",
             "пунктуальн", "пунктуально", "быстро", "быстр",
+            "вовремя", "своевременно", "комфорт", "прибыл", "прибыла",
+            "прибыло", "прибытие",
         }
         self.negative_lexeme = {
             # Негативные эмоции
@@ -311,8 +315,8 @@ class TransportIntentModel:
         adjusted = probs.copy()
         
         # Подсчитываем количество совпадений для более точной оценки
-        positive_matches = len(tokens & self.positive_lexeme)
-        negative_matches = len(tokens & self.negative_lexeme)
+        positive_matches = self._count_lexeme_matches(tokens, self.positive_lexeme)
+        negative_matches = self._count_lexeme_matches(tokens, self.negative_lexeme)
         
         # Если есть явные маркеры, сильно корректируем вероятности
         if negative_matches > 0:
@@ -346,6 +350,17 @@ class TransportIntentModel:
         
         return adjusted
 
+    @staticmethod
+    def _count_lexeme_matches(tokens: set[str], lexemes: set[str]) -> int:
+        """Считает совпадения по точному слову и по короткой основе."""
+        matches = 0
+        for token in tokens:
+            for lexeme in lexemes:
+                if token == lexeme or (len(lexeme) >= 5 and token.startswith(lexeme)):
+                    matches += 1
+                    break
+        return matches
+
     def _detect_mode(self, tokens: set[str]) -> str:
         for mode, keywords in self.mode_keywords.items():
             if tokens & keywords:
@@ -358,4 +373,3 @@ class TransportIntentModel:
         if "рейс" in tokens or "перрон" in tokens:
             return TransportMode.TRAIN
         return TransportMode.OTHER
-
