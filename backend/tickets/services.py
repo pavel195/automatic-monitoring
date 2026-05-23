@@ -13,6 +13,13 @@ from tickets.models import ChannelMessage, Ticket, TicketResponse
 logger = logging.getLogger(__name__)
 
 
+class ResponseDeliveryError(RuntimeError):
+    def __init__(self, response: TicketResponse, original_error: Exception):
+        super().__init__("Не удалось доставить ответ во внешний канал")
+        self.response = response
+        self.original_error = original_error
+
+
 class OutboundChannel(ABC):
     """Базовый интерфейс отправки ответов (SOLID: ISP + DIP)."""
 
@@ -29,9 +36,10 @@ class TelegramContext:
 
 class TelegramChannel(OutboundChannel):
     api_template = "https://api.telegram.org/bot{token}/{method}"
+    request_timeout = (5, 20)
 
     def __init__(self, token: Optional[str] = None):
-        self.token = token or settings.TELEGRAM_BOT_TOKEN
+        self.token = token or getattr(settings, "TELEGRAM_BOT_TOKEN", "")
 
     def send(self, ticket: Ticket, body: str) -> str:
         token = self._get_bot_token(ticket)
@@ -59,7 +67,11 @@ class TelegramChannel(OutboundChannel):
         last_exc = None
         for attempt in range(3):
             try:
-                response = requests.post(url, json=payload, timeout=10)
+                response = requests.post(
+                    url,
+                    json=payload,
+                    timeout=self.request_timeout,
+                )
                 if response.status_code in (502, 503, 504):
                     raise requests.exceptions.HTTPError(response=response)
                 if not response.ok:
@@ -210,7 +222,7 @@ class TicketResponseService:
             response.status = TicketResponse.Status.FAILED
             response.sent_at = timezone.now()
             response.save(update_fields=["status", "sent_at"])
-            raise
+            raise ResponseDeliveryError(response, exc) from exc
         return response
 
     def _resolve_channel(self, ticket: Ticket) -> tuple:

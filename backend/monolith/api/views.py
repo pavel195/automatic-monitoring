@@ -12,7 +12,7 @@ from analytics.search_indexer import search_tickets
 from companies.permissions import CompanyObjectPermission, IsCompanyMember
 from routing.tasks import classify_message
 from tickets.models import Assignment, ChannelMessage, Ticket, TicketResponse
-from tickets.services import TicketResponseService
+from tickets.services import ResponseDeliveryError, TicketResponseService
 
 from .serializers import (
     AssignmentSerializer,
@@ -100,11 +100,21 @@ class TicketViewSet(viewsets.ModelViewSet):
         if not body:
             return Response({"detail": "Текст ответа обязателен"}, status=400)
         service = TicketResponseService()
-        response = service.respond(
-            ticket=ticket,
-            body=body,
-            author=request.user if request.user.is_authenticated else None,
-        )
+        try:
+            response = service.respond(
+                ticket=ticket,
+                body=body,
+                author=request.user if request.user.is_authenticated else None,
+            )
+        except ResponseDeliveryError as exc:
+            serializer = TicketResponseSerializer(exc.response)
+            return Response(
+                {
+                    "detail": str(exc),
+                    "response": serializer.data,
+                },
+                status=502,
+            )
         serializer = TicketResponseSerializer(response)
         return Response(serializer.data, status=201)
 
