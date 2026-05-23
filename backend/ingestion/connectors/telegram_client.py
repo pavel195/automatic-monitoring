@@ -17,7 +17,7 @@ class TelegramConnector(BaseConnector):
     Для production лучше перейти на webhook, но для MVP достаточно поллинга.
     """
 
-    LONG_POLL_TIMEOUT = 5
+    LONG_POLL_TIMEOUT = 2
     REQUEST_TIMEOUT = (5, 20)
 
     QUICK_ACTIONS = {
@@ -177,6 +177,8 @@ class TelegramConnector(BaseConnector):
                     "metadata": metadata,
                 }
             )
+            if is_private:
+                self._send_service_message(self._send_intake_ack, chat_id)
         if offset_advanced:
             self._persist_offset()
         return events
@@ -254,6 +256,12 @@ class TelegramConnector(BaseConnector):
             action, ("request", "Введите детали обращения.")
         )
         self._post_message(chat_id, f"✅ {action}. {prompt}")
+
+    def _send_intake_ack(self, chat_id: str):
+        self._post_message(
+            chat_id,
+            "✅ Обращение принято. Оператор увидит его в системе в ближайшие секунды.",
+        )
 
     def _send_service_message(self, sender, *args):
         try:

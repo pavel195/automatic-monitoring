@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +11,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TicketsBoardComponent } from '../../components/tickets-board/tickets-board.component';
 import { TicketDetailsComponent } from '../../components/ticket-details/ticket-details.component';
 import { ApiService, Ticket } from '../../services/api.service';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { WebsocketService } from '../../services/websocket.service';
+import { debounceTime, distinctUntilChanged, Subject, Subscription } from 'rxjs';
 
 interface Filters {
   status: string | null;
@@ -39,7 +40,7 @@ interface Filters {
   templateUrl: './tickets.component.html',
   styleUrls: ['./tickets.component.css'],
 })
-export class TicketsComponent implements OnInit {
+export class TicketsComponent implements OnInit, OnDestroy {
   allTickets: Ticket[] = [];
   filteredTickets: Ticket[] = [];
   searchQuery: string = '';
@@ -54,13 +55,15 @@ export class TicketsComponent implements OnInit {
   };
 
   private searchSubject = new Subject<string>();
+  private refreshSub?: Subscription;
+  private searchSub?: Subscription;
 
   constructor(
     private readonly api: ApiService,
-    private readonly dialog: MatDialog
+    private readonly dialog: MatDialog,
+    private readonly ws: WebsocketService
   ) {
-    // Debounce для поиска - ждем 500ms после последнего ввода
-    this.searchSubject
+    this.searchSub = this.searchSubject
       .pipe(
         debounceTime(500),
         distinctUntilChanged()
@@ -72,10 +75,18 @@ export class TicketsComponent implements OnInit {
 
   ngOnInit() {
     this.loadTickets();
+    this.refreshSub = this.ws.stream().subscribe(() => this.loadTickets(false));
   }
 
-  loadTickets() {
-    this.loading = true;
+  ngOnDestroy() {
+    this.refreshSub?.unsubscribe();
+    this.searchSub?.unsubscribe();
+  }
+
+  loadTickets(showLoader = true) {
+    if (showLoader) {
+      this.loading = true;
+    }
     this.api.getTickets().subscribe({
       next: (data: any) => {
         this.allTickets = Array.isArray(data) ? data : data.results || [];

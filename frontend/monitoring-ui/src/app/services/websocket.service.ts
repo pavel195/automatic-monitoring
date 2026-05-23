@@ -8,7 +8,7 @@ export class WebsocketService implements OnDestroy {
   private ticker: Subscription;
 
   constructor() {
-    this.ticker = interval(10000)
+    this.ticker = interval(3000)
       .pipe(startWith(0))
       .subscribe(() => this.messages$.next({ type: 'tick' }));
   }
@@ -26,4 +26,3 @@ export class WebsocketService implements OnDestroy {
     this.messages$.complete();
   }
 }
-

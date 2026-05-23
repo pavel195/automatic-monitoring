@@ -141,3 +141,53 @@ def test_telegram_connector_persists_offset_when_quick_action_reply_times_out(
     assert redis.store[connector.offset_key] == 43
     assert redis.store[connector._private_action_key("111")] == "Жалоба"
     assert "Не удалось отправить ответ Telegram" in caplog.text
+
+
+def test_telegram_connector_acknowledges_private_message(monkeypatch):
+    redis = FakeRedis()
+    sent_messages = []
+    monkeypatch.setattr(
+        TelegramConnector,
+        "_init_state_store",
+        lambda self: setattr(self, "redis", redis),
+    )
+
+    def get_updates(*args, **kwargs):
+        return TelegramResponse(
+            {
+                "ok": True,
+                "result": [
+                    {
+                        "update_id": 51,
+                        "message": {
+                            "message_id": 9,
+                            "chat": {"id": 222, "type": "private"},
+                            "from": {"username": "passenger"},
+                            "text": "Поезд задерживается",
+                        },
+                    }
+                ],
+            }
+        )
+
+    def send_message(*args, **kwargs):
+        sent_messages.append(kwargs["json"])
+        return TelegramResponse({"ok": True, "result": {"message_id": 10}})
+
+    monkeypatch.setattr(requests, "get", get_updates)
+    monkeypatch.setattr(requests, "post", send_message)
+
+    connector = TelegramConnector(bot_token="token", allow_private=True)
+
+    events = connector.poll()
+
+    assert len(events) == 1
+    assert events[0]["payload"] == "Поезд задерживается"
+    assert sent_messages == [
+        {
+            "chat_id": "222",
+            "text": "✅ Обращение принято. Оператор увидит его в системе в ближайшие секунды.",
+            "disable_web_page_preview": True,
+        }
+    ]
+    assert redis.store[connector.offset_key] == 52

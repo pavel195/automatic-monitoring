@@ -109,6 +109,10 @@ export class AppComponent implements OnInit, OnDestroy {
     return roles[role] || 'Оператор';
   }
 
+  canManageIntegrations(profile: { role?: string } | null): boolean {
+    return profile?.role === 'company_admin' || profile?.role === 'superadmin';
+  }
+
   logout(): void {
     this.authService.logout();
   }

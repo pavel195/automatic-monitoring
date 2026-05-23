@@ -120,11 +120,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     "poll_telegram": {
         "task": "ingestion.tasks.poll_telegram",
-        "schedule": 15.0,
+        "schedule": 3.0,
     },
     "poll_vk": {
         "task": "ingestion.tasks.poll_vk",
-        "schedule": 15.0,
+        "schedule": 3.0,
     },
 }
 
@@ -140,4 +140,3 @@ OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "30"))
 OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "true").lower() == "true"
 
 PROMETHEUS_EXPORT_MIGRATIONS = False
-

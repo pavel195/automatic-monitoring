@@ -35,6 +35,15 @@
           <mat-icon>insights</mat-icon>
           <span class="nav-label" *ngIf="!collapsed">Аналитика</span>
         </a>
+
+        <ng-container *ngIf="currentProfile$ | async as profile">
+          <a class="nav-item" routerLink="/integrations" routerLinkActive="active"
+             *ngIf="canManageIntegrations(profile)"
+             [matTooltip]="collapsed ? 'Интеграции' : ''" matTooltipPosition="right">
+            <mat-icon>settings_input_component</mat-icon>
+            <span class="nav-label" *ngIf="!collapsed">Интеграции</span>
+          </a>
+        </ng-container>
       </nav>
 
       <!-- User section at bottom -->

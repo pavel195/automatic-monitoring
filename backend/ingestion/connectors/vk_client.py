@@ -27,7 +27,7 @@ class VkConnector(BaseConnector):
         self,
         community_token: str,
         community_id: str,
-        wait: int = 10,
+        wait: int = 2,
     ):
         self.token = community_token
         self.community_id = community_id

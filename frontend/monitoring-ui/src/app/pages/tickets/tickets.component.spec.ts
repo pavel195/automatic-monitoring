@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 
 import { TicketsComponent } from './tickets.component';
 import { ApiService, Ticket } from '../../services/api.service';
+import { WebsocketService } from '../../services/websocket.service';
 
 const ticket: Ticket = {
   id: 1,
@@ -25,6 +26,7 @@ describe('TicketsComponent', () => {
   let fixture: ComponentFixture<TicketsComponent>;
   let component: TicketsComponent;
   let api: jasmine.SpyObj<ApiService>;
+  let refresh$: Subject<{ type: string }>;
 
   beforeEach(async () => {
     api = jasmine.createSpyObj<ApiService>('ApiService', [
@@ -33,10 +35,19 @@ describe('TicketsComponent', () => {
     ]);
     api.getTickets.and.returnValue(of([]));
     api.searchTickets.and.returnValue(of({ hits: { hits: [] } }));
+    refresh$ = new Subject<{ type: string }>();
 
     await TestBed.configureTestingModule({
       imports: [TicketsComponent, NoopAnimationsModule],
-      providers: [{ provide: ApiService, useValue: api }],
+      providers: [
+        { provide: ApiService, useValue: api },
+        {
+          provide: WebsocketService,
+          useValue: {
+            stream: () => refresh$.asObservable(),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TicketsComponent);
@@ -49,5 +60,14 @@ describe('TicketsComponent', () => {
     component.performSearch('ничего нет');
 
     expect(component.filteredTickets).toEqual([]);
+  });
+
+  it('refreshes tickets when the realtime ticker emits', () => {
+    fixture.detectChanges();
+    expect(api.getTickets).toHaveBeenCalledTimes(1);
+
+    refresh$.next({ type: 'tick' });
+
+    expect(api.getTickets).toHaveBeenCalledTimes(2);
   });
 });
