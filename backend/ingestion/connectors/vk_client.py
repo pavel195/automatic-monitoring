@@ -44,7 +44,7 @@ class VkConnector(BaseConnector):
         resp = self.session.post(
             f"{VK_API_BASE}/{method}",
             data=params,
-            timeout=30,
+            timeout=getattr(settings, "VK_HTTP_TIMEOUT_SECONDS", 2.0),
         )
         resp.raise_for_status()
         data = resp.json()
@@ -104,7 +104,10 @@ class VkConnector(BaseConnector):
                     "ts": self._lp_ts,
                     "wait": self.wait,
                 },
-                timeout=self.wait + 10,
+                timeout=max(
+                    self.wait + 1,
+                    getattr(settings, "VK_HTTP_TIMEOUT_SECONDS", 2.0),
+                ),
             )
             resp.raise_for_status()
             data = resp.json()

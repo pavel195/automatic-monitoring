@@ -8,4 +8,7 @@ def test_channel_polling_runs_every_second_by_default():
 
 def test_external_channel_polling_uses_short_waits_by_default():
     assert settings.TELEGRAM_LONG_POLL_TIMEOUT == 0
+    assert settings.TELEGRAM_CONNECT_TIMEOUT == 1.0
+    assert settings.TELEGRAM_READ_TIMEOUT == 1.0
     assert settings.VK_LONG_POLL_WAIT_SECONDS == 1
+    assert settings.VK_HTTP_TIMEOUT_SECONDS == 2.0

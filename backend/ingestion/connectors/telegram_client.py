@@ -80,7 +80,7 @@ class TelegramConnector(BaseConnector):
             response = requests.get(
                 f"{self.api_url}/getUpdates",
                 params=params,
-                timeout=self.REQUEST_TIMEOUT,
+                timeout=self._request_timeout(),
             )
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
@@ -288,7 +288,7 @@ class TelegramConnector(BaseConnector):
         response = requests.post(
             f"{self.api_url}/sendMessage",
             json=payload,
-            timeout=self.REQUEST_TIMEOUT,
+            timeout=self._request_timeout(),
         )
         response.raise_for_status()
         data = response.json()
@@ -296,6 +296,13 @@ class TelegramConnector(BaseConnector):
             logger.warning("Не удалось отправить сообщение клавиатуры: %s", data)
             return None
         return str(data["result"]["message_id"])
+
+    @staticmethod
+    def _request_timeout():
+        return (
+            getattr(settings, "TELEGRAM_CONNECT_TIMEOUT", 1.0),
+            getattr(settings, "TELEGRAM_READ_TIMEOUT", 1.0),
+        )
 
     @staticmethod
     def _parse_chat_ids(raw: str) -> set[str]:

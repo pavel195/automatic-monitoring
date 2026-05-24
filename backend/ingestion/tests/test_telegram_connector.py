@@ -99,10 +99,13 @@ def test_telegram_connector_redacts_token_from_request_errors(monkeypatch, caplo
 
 def test_telegram_connector_uses_configured_poll_timeout(monkeypatch, settings):
     settings.TELEGRAM_LONG_POLL_TIMEOUT = 0
+    settings.TELEGRAM_CONNECT_TIMEOUT = 1.0
+    settings.TELEGRAM_READ_TIMEOUT = 1.0
     monkeypatch.setattr(TelegramConnector, "_init_state_store", lambda self: None)
 
     def get_updates(*args, **kwargs):
         assert kwargs["params"]["timeout"] == 0
+        assert kwargs["timeout"] == (1.0, 1.0)
         return TelegramResponse({"ok": True, "result": []})
 
     monkeypatch.setattr(requests, "get", get_updates)
@@ -123,7 +126,7 @@ def test_telegram_connector_persists_offset_when_quick_action_reply_times_out(
     )
 
     def get_updates(*args, **kwargs):
-        assert kwargs["timeout"] == TelegramConnector.REQUEST_TIMEOUT
+        assert kwargs["timeout"] == TelegramConnector._request_timeout()
         return TelegramResponse(
             {
                 "ok": True,
@@ -142,7 +145,7 @@ def test_telegram_connector_persists_offset_when_quick_action_reply_times_out(
         )
 
     def send_message(*args, **kwargs):
-        assert kwargs["timeout"] == TelegramConnector.REQUEST_TIMEOUT
+        assert kwargs["timeout"] == TelegramConnector._request_timeout()
         raise requests.exceptions.ReadTimeout("read timed out")
 
     monkeypatch.setattr(requests, "get", get_updates)
