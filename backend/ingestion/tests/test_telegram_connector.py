@@ -97,6 +97,21 @@ def test_telegram_connector_redacts_token_from_request_errors(monkeypatch, caplo
     assert "[redacted]" in caplog.text
 
 
+def test_telegram_connector_uses_configured_poll_timeout(monkeypatch, settings):
+    settings.TELEGRAM_LONG_POLL_TIMEOUT = 0
+    monkeypatch.setattr(TelegramConnector, "_init_state_store", lambda self: None)
+
+    def get_updates(*args, **kwargs):
+        assert kwargs["params"]["timeout"] == 0
+        return TelegramResponse({"ok": True, "result": []})
+
+    monkeypatch.setattr(requests, "get", get_updates)
+
+    connector = TelegramConnector(bot_token="token")
+
+    assert connector.poll() == []
+
+
 def test_telegram_connector_persists_offset_when_quick_action_reply_times_out(
     monkeypatch, caplog
 ):

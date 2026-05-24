@@ -1,8 +1,12 @@
 import logging
+from contextlib import contextmanager
 from datetime import datetime, timezone
+from uuid import uuid4
 
 import requests
+import redis
 from celery import shared_task
+from django.conf import settings
 
 from ingestion.connectors.telegram_client import TelegramConnector
 from routing.tasks import classify_message
@@ -11,11 +15,48 @@ from tickets.models import ChannelMessage, Sentiment, TransportMode
 logger = logging.getLogger(__name__)
 
 
+@contextmanager
+def polling_lock(name: str, ttl: int = 30):
+    """Защищает частый polling от наложения предыдущего запуска."""
+    key = f"ingestion:poll_lock:{name}"
+    token = uuid4().hex
+    try:
+        client = redis.Redis.from_url(settings.CELERY_BROKER_URL, decode_responses=True)
+        acquired = client.set(key, token, nx=True, ex=ttl)
+    except redis.RedisError as exc:
+        logger.warning("Не удалось получить Redis-lock для polling %s: %s", name, exc)
+        yield True
+        return
+
+    if not acquired:
+        yield False
+        return
+
+    try:
+        yield True
+    finally:
+        try:
+            if client.get(key) == token:
+                client.delete(key)
+        except redis.RedisError as exc:
+            logger.warning("Не удалось освободить Redis-lock для polling %s: %s", name, exc)
+
+
 @shared_task
 def poll_telegram():
     """Периодический опрос Telegram для всех активных ботов компаний."""
     from companies.models import TelegramBot
 
+    with polling_lock(
+        "telegram", ttl=getattr(settings, "POLL_LOCK_TTL_SECONDS", 30)
+    ) as acquired:
+        if not acquired:
+            logger.debug("Предыдущий Telegram polling ещё выполняется, цикл пропущен")
+            return
+        _poll_telegram_bots(TelegramBot)
+
+
+def _poll_telegram_bots(TelegramBot):
     active_bots = TelegramBot.objects.filter(
         status=TelegramBot.Status.ACTIVE, company__status="active"
     )
@@ -156,6 +197,14 @@ def poll_vk():
     from companies.models import VkBot
     from ingestion.connectors.vk_client import VkConnector
 
+    with polling_lock("vk", ttl=getattr(settings, "POLL_LOCK_TTL_SECONDS", 30)) as acquired:
+        if not acquired:
+            logger.debug("Предыдущий VK polling ещё выполняется, цикл пропущен")
+            return
+        _poll_vk_bots(VkBot, VkConnector)
+
+
+def _poll_vk_bots(VkBot, VkConnector):
     active_bots = VkBot.objects.filter(
         status=VkBot.Status.ACTIVE, company__status="active"
     )
@@ -169,6 +218,7 @@ def poll_vk():
             connector = VkConnector(
                 community_token=bot.community_token,
                 community_id=bot.community_id,
+                wait=getattr(settings, "VK_LONG_POLL_WAIT_SECONDS", 1),
             )
             events = connector.poll()
             logger.info("VK: получено событий: %s", len(events))

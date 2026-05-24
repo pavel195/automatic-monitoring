@@ -7,6 +7,15 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def env_float(name: str, default: float) -> float:
+    return float(os.getenv(name, str(default)))
+
+
+def env_int(name: str, default: int) -> int:
+    return int(os.getenv(name, str(default)))
+
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe")
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
@@ -113,6 +122,14 @@ SPECTACULAR_SETTINGS = {
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CHANNEL_POLL_INTERVAL_SECONDS = env_float("CHANNEL_POLL_INTERVAL_SECONDS", 1.0)
+TELEGRAM_POLL_INTERVAL_SECONDS = env_float(
+    "TELEGRAM_POLL_INTERVAL_SECONDS", CHANNEL_POLL_INTERVAL_SECONDS
+)
+VK_POLL_INTERVAL_SECONDS = env_float("VK_POLL_INTERVAL_SECONDS", CHANNEL_POLL_INTERVAL_SECONDS)
+POLL_LOCK_TTL_SECONDS = env_int("POLL_LOCK_TTL_SECONDS", 30)
+TELEGRAM_LONG_POLL_TIMEOUT = env_int("TELEGRAM_LONG_POLL_TIMEOUT", 0)
+VK_LONG_POLL_WAIT_SECONDS = env_int("VK_LONG_POLL_WAIT_SECONDS", 1)
 CELERY_BEAT_SCHEDULE = {
     "sla_watchdog": {
         "task": "routing.tasks.sla_watchdog",
@@ -120,11 +137,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     "poll_telegram": {
         "task": "ingestion.tasks.poll_telegram",
-        "schedule": 3.0,
+        "schedule": TELEGRAM_POLL_INTERVAL_SECONDS,
     },
     "poll_vk": {
         "task": "ingestion.tasks.poll_vk",
-        "schedule": 3.0,
+        "schedule": VK_POLL_INTERVAL_SECONDS,
     },
 }
 

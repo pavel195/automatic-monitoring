@@ -72,7 +72,10 @@ class TelegramConnector(BaseConnector):
             logger.warning("TELEGRAM_BOT_TOKEN не задан, коннектор выключен")
             return []
 
-        params = {"timeout": self.LONG_POLL_TIMEOUT, "offset": self._offset}
+        params = {
+            "timeout": getattr(settings, "TELEGRAM_LONG_POLL_TIMEOUT", self.LONG_POLL_TIMEOUT),
+            "offset": self._offset,
+        }
         try:
             response = requests.get(
                 f"{self.api_url}/getUpdates",
