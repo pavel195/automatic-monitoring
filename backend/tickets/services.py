@@ -36,7 +36,6 @@ class TelegramContext:
 
 class TelegramChannel(OutboundChannel):
     api_template = "https://api.telegram.org/bot{token}/{method}"
-    request_timeout = (5, 20)
 
     def __init__(self, token: Optional[str] = None):
         self.token = token or getattr(settings, "TELEGRAM_BOT_TOKEN", "")
@@ -70,7 +69,7 @@ class TelegramChannel(OutboundChannel):
                 response = requests.post(
                     url,
                     json=payload,
-                    timeout=self.request_timeout,
+                    timeout=self._request_timeout(),
                 )
                 if response.status_code in (502, 503, 504):
                     raise requests.exceptions.HTTPError(response=response)
@@ -134,6 +133,13 @@ class TelegramChannel(OutboundChannel):
             reply_to = message.external_id
 
         return TelegramContext(chat_id=str(chat_id), reply_to=str(reply_to) if reply_to else None)
+
+    @staticmethod
+    def _request_timeout():
+        return (
+            getattr(settings, "TELEGRAM_CONNECT_TIMEOUT", 1.0),
+            getattr(settings, "TELEGRAM_READ_TIMEOUT", 1.0),
+        )
 
 
 class VkChannel(OutboundChannel):

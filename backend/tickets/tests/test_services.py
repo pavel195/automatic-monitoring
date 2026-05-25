@@ -36,6 +36,45 @@ def test_ticket_response_service_sends_message(user_factory, ticket_factory):
 
 
 @pytest.mark.django_db
+def test_telegram_channel_uses_configured_timeouts(monkeypatch, settings, ticket_factory):
+    settings.TELEGRAM_CONNECT_TIMEOUT = 0.4
+    settings.TELEGRAM_READ_TIMEOUT = 0.8
+    ticket: Ticket = ticket_factory()
+    ChannelMessage.objects.create(
+        external_id="123",
+        channel=ChannelMessage.Channel.TELEGRAM,
+        author="user",
+        payload="hello",
+        metadata={"chat_id": 1, "raw": {"message_id": 123}},
+        received_at=timezone.now(),
+        ticket=ticket,
+    )
+    sent = {}
+
+    class FakeResponse:
+        status_code = 200
+        ok = True
+        content = b"{}"
+
+        def json(self):
+            return {"ok": True, "result": {"message_id": 777}}
+
+    def fake_post(url, json, timeout):
+        sent["url"] = url
+        sent["payload"] = json
+        sent["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr("tickets.services.requests.post", fake_post)
+
+    result = TelegramChannel(token="token").send(ticket, "Ответ")
+
+    assert result == "777"
+    assert sent["timeout"] == (0.4, 0.8)
+    assert sent["payload"]["reply_to_message_id"] == 123
+
+
+@pytest.mark.django_db
 def test_ticket_respond_api_returns_failed_response_when_delivery_fails(
     monkeypatch, user_factory
 ):
